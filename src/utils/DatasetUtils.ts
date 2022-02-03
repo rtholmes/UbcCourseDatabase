@@ -10,7 +10,21 @@ import {InsightError} from "../controller/IInsightFacade";
  */
 
 function isValidDatasetId(id: string): boolean {
-	// stub
+	// checks if the id is all whitespace
+	const whiteSpaceRegex: RegExp = /^\s*$/;
+	// checks if the id contains an underscore
+	const underScoreRegex: RegExp = /^.*_.*$/;
+
+	// checks if the id is all whitespace and returns false if so
+	if (id.match(whiteSpaceRegex)) {
+		return false;
+	}
+
+	// checks if the id contains an underscore and returns false if so
+	if (!id.match(underScoreRegex)) {
+		return false;
+	}
+
 	return false;
 }
 

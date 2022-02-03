@@ -9,7 +9,7 @@ import {InsightError} from "../controller/IInsightFacade";
  * @param id: The id of a database
  */
 
-function isValidDatasetId(id: string): boolean {
+function isValidDatasetIdName(id: string): boolean {
 	// checks if the id is all whitespace
 	const whiteSpaceRegex: RegExp = /^\s*$/;
 	// checks if the id contains an underscore
@@ -25,7 +25,7 @@ function isValidDatasetId(id: string): boolean {
 		return false;
 	}
 
-	return false;
+	return true;
 }
 
 /**
@@ -102,4 +102,4 @@ function transformToNewKey(value: string | number, expectedTypeOfValue: string, 
 	}
 }
 
-export {translateIdToMatchDatasetStyle, isValidDatasetId};
+export {translateIdToMatchDatasetStyle, isValidDatasetIdName};

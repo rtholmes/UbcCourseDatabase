@@ -1,0 +1,23 @@
+{
+	"title": "filter IS query",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"courses_uuid": "26777"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_dept",
+				"courses_uuid"
+			],
+			"ORDER": "courses_dept"
+		}
+	},
+	"expected": [
+		{
+			"courses_dept": "cnps",
+			"courses_uuid": "26777"
+		}
+	]
+}

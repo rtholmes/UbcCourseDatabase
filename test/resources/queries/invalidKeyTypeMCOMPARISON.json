@@ -1,0 +1,29 @@
+{
+	"title": "should reject MCOMPARISON queries with invalid key type",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"GT": {
+						"courses_dept": 90
+					}
+				},
+				{
+					"IS": {
+						"courses_dept": "adhe"
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_dept",
+				"courses_id",
+				"courses_avg"
+			],
+			"ORDER": "courses_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

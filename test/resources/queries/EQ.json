@@ -1,0 +1,31 @@
+{
+	"title": "filter EQ query",
+	"input": {
+		"WHERE": {
+			"EQ": {
+				"courses_avg": 0
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_dept",
+				"courses_pass"
+			],
+			"ORDER": "courses_pass"
+		}
+	},
+	"expected": [
+		{
+			"courses_dept": "lfs",
+			"courses_pass": 0
+		},
+		{
+			"courses_dept": "lfs",
+			"courses_pass": 0
+		},
+		{
+			"courses_dept": "frst",
+			"courses_pass": 0
+		}
+	]
+}

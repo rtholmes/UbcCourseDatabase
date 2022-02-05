@@ -1,0 +1,29 @@
+{
+	"title": "should reject queries with '*' in inputstring",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"GT": {
+						"courses_avg": 90
+					}
+				},
+				{
+					"IS": {
+						"courses_dept": "ad*he"
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_dept",
+				"courses_id",
+				"courses_avg"
+			],
+			"ORDER": "courses_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

@@ -1,0 +1,35 @@
+{
+	"title": "filter LT query",
+	"input": {
+		"WHERE": {
+			"LT": {
+				"courses_avg": 4
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_dept",
+				"courses_title"
+			],
+			"ORDER": "courses_title"
+		}
+	},
+	"expected": [
+		{
+			"courses_dept": "frst",
+			"courses_title": "forest ecology"
+		},
+		{
+			"courses_dept": "lfs",
+			"courses_title": "in land food com"
+		},
+		{
+			"courses_dept": "lfs",
+			"courses_title": "in land food com"
+		},
+		{
+			"courses_dept": "wood",
+			"courses_title": "prpty,ident&uses"
+		}
+	]
+}

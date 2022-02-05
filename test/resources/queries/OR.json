@@ -1,0 +1,52 @@
+{
+	"title": "logic OR query double filter query",
+	"input": {
+		"WHERE": {
+			"OR": [
+				{
+					"GT": {
+						"courses_avg": 99
+					}
+				},
+				{
+					"LT": {
+						"courses_avg": 1
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_dept",
+				"courses_uuid"
+			],
+			"ORDER": "courses_uuid"
+		}
+	},
+	"expected": [
+		{
+			"courses_dept": "cnps",
+			"courses_uuid": "26777"
+		},
+		{
+			"courses_dept": "math",
+			"courses_uuid": "5373"
+		},
+		{
+			"courses_dept": "math",
+			"courses_uuid": "5374"
+		},
+		{
+			"courses_dept": "lfs",
+			"courses_uuid": "56402"
+		},
+		{
+			"courses_dept": "lfs",
+			"courses_uuid": "56403"
+		},
+		{
+			"courses_dept": "frst",
+			"courses_uuid": "89536"
+		}
+	]
+}

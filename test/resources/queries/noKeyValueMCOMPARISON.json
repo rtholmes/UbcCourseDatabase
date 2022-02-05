@@ -1,0 +1,27 @@
+{
+	"title": "should reject MCOMPARISON queries with no key and value",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"GT": {}
+				},
+				{
+					"IS": {
+						"courses_dept": "adhe"
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_dept",
+				"courses_id",
+				"courses_avg"
+			],
+			"ORDER": "courses_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

@@ -1,0 +1,43 @@
+{
+	"title": "Invalid 5001 result query",
+	"input": {
+		"WHERE": {
+			"OR": [
+				{
+					"EQ": {
+						"courses_avg": 63
+					}
+				},
+				{
+					"EQ": {
+						"courses_avg": 66
+					}
+				},
+				{
+					"EQ": {
+						"courses_avg": 69
+					}
+				},
+				{
+					"EQ": {
+						"courses_avg": 51
+					}
+				},
+				{
+					"GT": {
+						"courses_avg": 88.75
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_dept",
+				"courses_avg"
+			],
+			"ORDER": "courses_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "ResultTooLargeError"
+}

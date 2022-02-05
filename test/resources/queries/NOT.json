@@ -1,0 +1,33 @@
+{
+	"title": "filter NOT query",
+	"input": {
+		"WHERE": {
+			"NOT": {
+				"GT": {
+					"courses_avg": 0
+				}
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_dept",
+				"courses_fail"
+			],
+			"ORDER": "courses_fail"
+		}
+	},
+	"expected": [
+		{
+			"courses_dept": "lfs",
+			"courses_fail": 1
+		},
+		{
+			"courses_dept": "lfs",
+			"courses_fail": 1
+		},
+		{
+			"courses_dept": "frst",
+			"courses_fail": 1
+		}
+	]
+}

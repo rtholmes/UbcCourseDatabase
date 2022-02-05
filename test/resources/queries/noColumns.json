@@ -1,0 +1,20 @@
+{
+	"title": "should reject queries missing COLUMNS",
+	"input": {
+		"WHERE": {
+			"GT": {
+				"courses_avg": 98.75
+			}
+		},
+		"OPTIONS": {
+			"ROWS": [
+				"courses_dept",
+				"courses_id",
+				"courses_avg"
+			],
+			"ORDER": "courses_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

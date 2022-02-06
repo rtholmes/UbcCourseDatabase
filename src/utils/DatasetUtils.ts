@@ -29,16 +29,6 @@ function isValidDatasetIdName(id: string): boolean {
 	return true;
 }
 
-function doesDatasetIdAlreadyExist(id: string): boolean {
-	return false;
-}
-
-function translateBase64ContentToFolder(content: string) {
-	JSZip.loadAsync(content, {base64: true}).then(function (zip) {
-		console.log(zip);
-	});
-}
-
 /**
  * query keys use "courses_<key>" whereas in the data is just <key>
  * This helper verifies that it is a valid key then returns the translated key

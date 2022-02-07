@@ -1,0 +1,39 @@
+{
+	"title": "filter IS query with wildcards",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"courses_uuid": "2678*"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_dept",
+				"courses_id"
+			],
+			"ORDER": "courses_id"
+		}
+	},
+	"expected": [
+		{
+			"courses_dept": "envr",
+			"courses_id": "200"
+		},
+		{
+			"courses_dept": "cnps",
+			"courses_id": "584"
+		},
+		{
+			"courses_dept": "cnps",
+			"courses_id": "584"
+		},
+		{
+			"courses_dept": "cnps",
+			"courses_id": "586"
+		},
+		{
+			"courses_dept": "cnps",
+			"courses_id": "586"
+		}
+	]
+}

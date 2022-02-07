@@ -1,0 +1,40 @@
+{
+	"title": "logic AND query double filter query",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"GT": {
+						"courses_avg": 92
+					}
+				},
+				{
+					"IS": {
+						"courses_dept": "adhe"
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_dept",
+				"courses_audit"
+			],
+			"ORDER": "courses_audit"
+		}
+	},
+	"expected": [
+		{
+			"courses_dept": "adhe",
+			"courses_audit": 0
+		},
+		{
+			"courses_dept": "adhe",
+			"courses_audit": 0
+		},
+		{
+			"courses_dept": "adhe",
+			"courses_audit": 0
+		}
+	]
+}

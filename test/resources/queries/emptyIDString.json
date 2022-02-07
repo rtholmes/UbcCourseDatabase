@@ -1,0 +1,29 @@
+{
+	"title": "should reject queries with empty idstring",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"GT": {
+						"_avg": 90
+					}
+				},
+				{
+					"IS": {
+						"_dept": "adhe"
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"_dept",
+				"_id",
+				"_avg"
+			],
+			"ORDER": "_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

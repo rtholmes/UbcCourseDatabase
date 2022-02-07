@@ -1,0 +1,39 @@
+{
+	"title": "should set the course year to 1900 if section property is set to 'overall'",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"IS": {
+						"courses_dept": "cpsc"
+					}
+				},
+				{
+					"IS": {
+						"courses_id": "110"
+					}
+				},
+				{
+					"EQ": {
+						"courses_avg": 72.63
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"courses_dept",
+				"courses_id",
+				"courses_year"
+			],
+			"ORDER": "courses_year"
+		}
+	},
+	"expected": [
+		{
+			"courses_dept": "cpsc",
+			"courses_id": "110",
+			"courses_year": 1900
+		}
+	]
+}

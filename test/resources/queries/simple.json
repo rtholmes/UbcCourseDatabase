@@ -16,15 +16,15 @@
 	},
 	"expected": [
 		{
+			"courses_dept": "math",
+			"courses_avg": 97.09
+		},
+		{
+			"courses_dept": "math",
+			"courses_avg": 97.09
+		},
+		{
 			"courses_dept": "epse",
-			"courses_avg": 97.09
-		},
-		{
-			"courses_dept": "math",
-			"courses_avg": 97.09
-		},
-		{
-			"courses_dept": "math",
 			"courses_avg": 97.09
 		},
 		{

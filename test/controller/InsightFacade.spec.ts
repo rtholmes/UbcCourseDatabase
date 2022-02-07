@@ -89,10 +89,9 @@ describe("InsightFacade", function () {
 
 		it("should add multiple datasets successfully", function() {
 			const content: string = datasetContents.get("courses") ?? "";
-			const content2: string = datasetContents.get("courses2") ?? "";
 			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
 				.then(() => {
-					return insightFacade.addDataset("courses2", content2, InsightDatasetKind.Courses);
+					return insightFacade.addDataset("courses2", content, InsightDatasetKind.Courses);
 				})
 				.then((dataIDS) => {
 					expect(dataIDS).to.be.an.instanceof(Array);

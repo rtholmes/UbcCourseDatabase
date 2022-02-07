@@ -33,7 +33,6 @@
 			"ORDER": "courses_avg"
 		}
 	},
-
 	"expected": [
 		{
 			"courses_dept": "adhe",

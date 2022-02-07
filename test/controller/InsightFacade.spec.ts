@@ -21,12 +21,12 @@ describe("InsightFacade", function () {
 	// automatically be loaded in the 'before' hook.
 	const datasetsToLoad: {[key: string]: string} = {
 		courses: "./test/resources/archives/courses.zip",
-		noCoursesTest: "./test/resources/archives/noCoursesTest.zip",
-		nonZipTest: "./test/resources/archives/nonZipTest.txt",
-		roomsTest: "./test/resources/archives/roomsTest.zip",
-		skipTest: "./test/resources/archives/skipTest.zip",
-		invalidJSONTest: "./test/resources/archives/invalidJSONTest.zip",
-		invalidJSONTest2: "./test/resources/archives/invalidJSONTest2.zip",
+		noCourses: "./test/resources/archives/noCourses.zip",
+		nonZip: "./test/resources/archives/nonZip.txt",
+		rooms: "./test/resources/archives/rooms.zip",
+		skipNonJSON: "./test/resources/archives/skipNonJSON.zip",
+		singleInvalidJSON: "./test/resources/archives/singleInvalidJSON.zip",
+		skipInvalidJSON: "./test/resources/archives/skipInvalidJSON.zip",
 	};
 
 	before(function () {
@@ -109,9 +109,20 @@ describe("InsightFacade", function () {
 				});
 		});
 
-		it("should reject add when id is white space", function() {
+		it("should reject add when id is empty", function() {
 			const content: string = datasetContents.get("courses") ?? "";
 			return insightFacade.addDataset("", content, InsightDatasetKind.Courses)
+				.then(() => {
+					expect.fail("Should not execute");
+				})
+				.catch((err) => {
+					expect(err).to.be.an.instanceof(InsightError);
+				});
+		});
+
+		it("should reject add when id is white space", function() {
+			const content: string = datasetContents.get("courses") ?? "";
+			return insightFacade.addDataset(" ", content, InsightDatasetKind.Courses)
 				.then(() => {
 					expect.fail("Should not execute");
 				})
@@ -168,7 +179,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should reject non zip files", function() {
-			const content: string = datasetContents.get("nonZipTest") ?? "";
+			const content: string = datasetContents.get("nonZip") ?? "";
 			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
 				.then(() => {
 					expect.fail("Should not execute");
@@ -179,7 +190,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should reject zip files without a courses folder", function() {
-			const content: string = datasetContents.get("roomsTest") ?? "";
+			const content: string = datasetContents.get("rooms") ?? "";
 			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
 				.then(() => {
 					expect.fail("Should not execute");
@@ -190,7 +201,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should reject zip files with an empty courses folder", function() {
-			const content: string = datasetContents.get("noCoursesTest") ?? "";
+			const content: string = datasetContents.get("noCourses") ?? "";
 			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
 				.then(() => {
 					expect.fail("Should not execute");
@@ -201,7 +212,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should reject single invalid JSON", function() {
-			const content: string = datasetContents.get("invalidJSONTest") ?? "";
+			const content: string = datasetContents.get("singleInvalidJSON") ?? "";
 			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
 				.then(() => {
 					expect.fail("Should not execute");
@@ -212,7 +223,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should skip over any non JSON files", function() {
-			const content: string = datasetContents.get("skipTest") ?? "";
+			const content: string = datasetContents.get("skipNonJSON") ?? "";
 			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
 				.then(() => {
 					return insightFacade.listDatasets().then((insightDatasets) => {
@@ -231,7 +242,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should skip invalid JSON files", function () {
-			const content: string = datasetContents.get("invalidJSONTest2") ?? "";
+			const content: string = datasetContents.get("skipInvalidJSON") ?? "";
 			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
 				.then(() => {
 					return insightFacade.listDatasets().then((insightDatasets) => {
@@ -333,11 +344,25 @@ describe("InsightFacade", function () {
 				});
 		});
 
-		it("should reject remove when id is white space", function(){
+		it("should reject remove when id is empty", function(){
 			const content: string = datasetContents.get("courses") ?? "";
 			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
 				.then(() => {
 					return insightFacade.removeDataset("");
+				})
+				.then(() => {
+					expect.fail("Should not execute");
+				})
+				.catch((err) => {
+					expect(err).to.be.instanceof(InsightError);
+				});
+		});
+
+		it("should reject remove when id is white space", function(){
+			const content: string = datasetContents.get("courses") ?? "";
+			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
+				.then(() => {
+					return insightFacade.removeDataset(" ");
 				})
 				.then(() => {
 					expect.fail("Should not execute");

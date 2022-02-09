@@ -1,4 +1,5 @@
 import {InsightError} from "../controller/IInsightFacade";
+import JSZip from "jszip";
 
 /**
  * Checks the validity of an id
@@ -21,7 +22,7 @@ function isValidDatasetIdName(id: string): boolean {
 	}
 
 	// checks if the id contains an underscore and returns false if so
-	if (!id.match(underScoreRegex)) {
+	if (id.match(underScoreRegex)) {
 		return false;
 	}
 
@@ -29,50 +30,48 @@ function isValidDatasetIdName(id: string): boolean {
 }
 
 /**
- * query keys use "courses_<key> whereas in the data is just <key>
- * This helper verifies that it is both a valid key and returns the translated key
+ * query keys use "courses_<key>" whereas in the data is just <key>
+ * This helper verifies that it is a valid key then returns the translated key
  * Throws InsightError if there is not a valid key
- * Throws InsightError if the value of the key is the incorrect type
  *
  *
  * @param key: The key of the InsightResult
- * @param value: The value of the InsightResult, either of type string or number
  *
  */
 
-function translateIdToMatchDatasetStyle(key: string, value: string | number): string {
+function translateIdToMatchDatasetStyle(key: string): string {
 	let newKey: string;
 
 	switch (key) {
 		case "courses_dept": {
-			newKey = transformToNewKey(value, "string", "dept");
+			newKey = "dept";
 			break;
 		} case "courses_id": {
-			newKey = transformToNewKey(value, "string", "id");
+			newKey = "id";
 			break;
 		} case "courses_avg": {
-			newKey = transformToNewKey(value, "number", "avg");
+			newKey = "avg";
 			break;
 		} case "courses_instructor": {
-			newKey = transformToNewKey(value, "string", "instructor");
+			newKey = "instructor";
 			break;
 		} case "courses_title": {
-			newKey = transformToNewKey(value, "string", "title");
+			newKey = "title";
 			break;
 		} case "courses_pass": {
-			newKey = transformToNewKey(value, "number", "pass");
+			newKey = "pass";
 			break;
 		} case "courses_fail": {
-			newKey = transformToNewKey(value, "number", "fail");
+			newKey = "fail";
 			break;
 		} case "courses_audit": {
-			newKey = transformToNewKey(value, "number", "audit");
+			newKey = "audit";
 			break;
 		} case "courses_uuid": {
-			newKey = transformToNewKey(value, "string", "uuid");
+			newKey = "uuid";
 			break;
 		} case "courses_year": {
-			newKey = transformToNewKey(value, "number", "year");
+			newKey = "year";
 			break;
 		} default: {
 			throw new InsightError("Given an invalid key " + key);
@@ -82,24 +81,74 @@ function translateIdToMatchDatasetStyle(key: string, value: string | number): st
 }
 
 /**
- * Check the originalType and the expectedType are the same and returns the newKey if matched
- * Otherwise throws insightError if not matched
+ * Takes key and then verifies if the attched datatype is of the correct type
+ * If it does not match throws InsightError
  *
+ *
+ * @param key: key of the InsightResult
+ * @param value: value of the InsightResult
+ */
+
+function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
+	let expectedDatatype: string;
+
+	switch (key) {
+		case "dept": {
+			expectedDatatype = "string";
+			break;
+		} case "id": {
+			expectedDatatype = "string";
+			break;
+		} case "avg": {
+			expectedDatatype = "number";
+			break;
+		} case "instructor": {
+			expectedDatatype = "string";
+			break;
+		} case "title": {
+			expectedDatatype = "string";
+			break;
+		} case "pass": {
+			expectedDatatype = "number";
+			break;
+		} case "fail": {
+			expectedDatatype = "number";
+			break;
+		} case "audit": {
+			expectedDatatype = "number";
+			break;
+		} case "uuid": {
+			expectedDatatype = "string";
+			break;
+		} case "year": {
+			expectedDatatype = "number";
+			break;
+		} default: {
+			throw new InsightError("Given an invalid key " + key);
+		}
+	}
+
+	checkIdProperDatatype(value, expectedDatatype, key);
+}
+
+/**
+ * Returns if the expected and actual values types match up
+ * Otherwise throws and InsightError
  *
  * @param value: original value
  * @param expectedTypeOfValue: the expected type of the value
- * @param newKey: the new key to match the dataset style
+ * @param key: the key of the value, used for error message
  */
 
-function transformToNewKey(value: string | number, expectedTypeOfValue: string, newKey: string): string {
+function checkIdProperDatatype(value: string | number, expectedTypeOfValue: string, key: string): void {
 	if (typeof value === expectedTypeOfValue) {
-		return newKey;
+		return;
 	} else {
 		throw new InsightError(`Invalid value type for
-		key: ${newKey}
+		key: ${key}
 		actualType: ${typeof value}
 		expectedType: ${expectedTypeOfValue}`);
 	}
 }
 
-export {translateIdToMatchDatasetStyle, isValidDatasetIdName};
+export {translateIdToMatchDatasetStyle, isValidDatasetIdName, checkCorrectTypeOfValueForKey};

@@ -62,7 +62,7 @@ describe( "Dataset Util Tests", function () {
 		}
 	});
 
-	it("Test that a key is passing with it's expected datatype", function () {
+	it("Test that a key is passing with its expected datatype", function () {
 		let map = new Map<string, number | string>([
 			["dept", "CPSC"],
 			["id", "201"],

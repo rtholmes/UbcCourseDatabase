@@ -27,22 +27,23 @@ export default class InsightFacade implements IInsightFacade {
 					const obj = JSON.parse(contents);
 					const result = obj.result;
 					for (let i = 0; i <= result.length; i++) {
-						let dept = result[i].Subject;
-						let id = result[i].Course;
-						let avg = result[i].Avg;
-						let instructor = result[i].Professor;
-						let title = result[i].Title;
-						let pass = result[i].Pass;
-						let fail = result[i].Fail;
-						let audit = result[i].Audit;
-						let uuid = result[i].id;
-						let year = result[i].Year;
+						let COURSE_DEPT = result[i].Subject;
+						let COURSE_ID = result[i].Course;
+						let COURSE_AVG = result[i].Avg;
+						let COURSE_INSTRUCTOR = result[i].Professor;
+						let COURSE_TITLE = result[i].Title;
+						let COURSE_PASS = result[i].Pass;
+						let COURSE_FAIL = result[i].Fail;
+						let COURSE_AUDIT = result[i].Audit;
+						let COURSE_UUID = result[i].id;
+						let COURSE_YEAR = result[i].Year;
 						if (result[i].Section === "overall") {
-							year = "1900";
+							COURSE_YEAR = "1900";
 						}
-						if (dept !== undefined && id !== undefined && avg !== undefined &&
-							instructor !== undefined && title !== undefined && pass !== undefined &&
-							fail !== undefined && audit !== undefined && uuid !== undefined && year !== undefined) {
+						if (COURSE_DEPT !== undefined && id !== undefined && COURSE_AVG !== undefined &&
+							COURSE_INSTRUCTOR !== undefined && COURSE_TITLE !== undefined && COURSE_PASS !== undefined
+							&& COURSE_FAIL !== undefined && COURSE_AUDIT !== undefined && COURSE_UUID !== undefined &&
+							COURSE_YEAR !== undefined) {
 							// Todo: Save valid fields to some data structure
 						}
 					}

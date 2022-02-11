@@ -2,23 +2,6 @@ import {InsightError} from "../controller/IInsightFacade";
 import JSZip from "jszip";
 
 /**
- * Checks the validity of content
- * Will return true if content is a zip file,
- * false otherwise
- *
- * Valid content is a string that ends with .zip
- *
- * @param content: The content of a database
- */
-function isValidContentType(content: string): boolean {
-	const endsWithZipRegex: RegExp = /.*\.zip$/;
-	if (content.match(endsWithZipRegex)) {
-		return true;
-	}
-	return false;
-}
-
-/**
  * Checks the validity of an id
  * Will return false if an invalid id, else true
  *
@@ -171,6 +154,5 @@ function checkIdProperDatatype(value: string | number, expectedTypeOfValue: stri
 export {
 	translateIdToMatchDatasetStyle,
 	isValidDatasetIdName,
-	checkCorrectTypeOfValueForKey,
-	isValidContentType
+	checkCorrectTypeOfValueForKey
 };

@@ -1,11 +1,6 @@
-import {
-	IInsightFacade,
-	InsightDataset,
-	InsightDatasetKind,
-	InsightError,
-	InsightResult,
-	NotFoundError
-} from "./IInsightFacade";
+import {IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult} from "./IInsightFacade";
+
+import {isValidDatasetIdName, isValidContentType} from "../../src/utils/DatasetUtils";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -18,6 +13,15 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
+		if (!isValidDatasetIdName(id)) {
+			return Promise.reject (new InsightError("Given an invalid id " + id));
+		}
+		if (kind === InsightDatasetKind.Rooms) {
+			return Promise.reject (new InsightError("Given dataset kind Rooms"));
+		}
+		if (!isValidContentType(content)) {
+			return Promise.reject (new InsightError("Given a non zip file"));
+		}
 		return Promise.reject("Not implemented.");
 	}
 

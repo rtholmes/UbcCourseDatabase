@@ -110,13 +110,11 @@ describe("InsightFacade", function () {
 
 		it("should reject add when id is empty", function() {
 			const content: string = datasetContents.get("courses") ?? "";
-			return insightFacade.addDataset("", content, InsightDatasetKind.Courses)
-				.then(() => {
-					expect.fail("Should not execute");
-				})
-				.catch((err) => {
-					expect(err).to.be.an.instanceof(InsightError);
-				});
+			return insightFacade.addDataset("", content, InsightDatasetKind.Courses).then(() => {
+				expect.fail("Should not execute");
+			}).catch((err) => {
+				expect(err).to.be.an.instanceof(InsightError);
+			});
 		});
 
 		it("should reject add when id is white space", function() {

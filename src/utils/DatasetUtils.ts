@@ -11,7 +11,6 @@ let dataSet: any[] = [];
  * @param content: The content of a database
  * @param id: The id of a database
  */
-
 function processData(content: string, id: string): Promise<string[]> {
 	return new Promise((resolve, reject) => {
 		unzipData(content)
@@ -44,7 +43,6 @@ function processData(content: string, id: string): Promise<string[]> {
  *
  * @param content: The content of a database
  */
-
 function unzipData(content: string): Promise<any> {
 	return new Promise((resolve, reject) => {
 		let zip = new JSZip();
@@ -64,7 +62,6 @@ function unzipData(content: string): Promise<any> {
  *
  * @param unZippedContent: The unzipped content read from JSZIP
  */
-
 function parseData(unZippedContent: JSZip): Array<Promise<any>> {
 	let promiseArray: Array<Promise<any>> = [];
 	unZippedContent.folder("courses")?.forEach(((relativePath, file) => {
@@ -79,8 +76,8 @@ function parseData(unZippedContent: JSZip): Array<Promise<any>> {
  * Will return the number of valid sections added to database
  *
  * @param JSONs: The readable JSON content from /courses directory
+ * @param id: The id of a database
  */
-
 function grabData(JSONs: string[], id: string): number {
 	let validSectionsAdded = 0;
 	for (const val of JSONs) {
@@ -113,7 +110,6 @@ function grabData(JSONs: string[], id: string): number {
  *
  * @param attributes: The array of fields grabbed from JSONs
  */
-
 function isValidSection(attributes: any[]): boolean {
 	for (const val of attributes) {
 		if (val === undefined) {
@@ -131,7 +127,6 @@ function isValidSection(attributes: any[]): boolean {
  *
  * @param id: The id of a database
  */
-
 function isExistingDatasetIdName(id: string): boolean {
 	let idArray1: string[] = [];
 	for (let val of dataSet) {
@@ -146,7 +141,6 @@ function isExistingDatasetIdName(id: string): boolean {
  *
  * Will return with array of currently added ids
  */
-
 function grabDatasetNames(): Promise<string[]> {
 	let idArray: string[] = [];
 	for (let val of dataSet) {
@@ -165,7 +159,6 @@ function grabDatasetNames(): Promise<string[]> {
  *
  * @param id: The id of a database
  */
-
 function isValidDatasetIdName(id: string): boolean {
 	const whiteSpaceRegex: RegExp = /^\s*$/;
 	const underScoreRegex: RegExp = /^.*_.*$/;
@@ -181,7 +174,6 @@ function isValidDatasetIdName(id: string): boolean {
  * @param key: The key of the InsightResult
  *
  */
-
 function translateIdToMatchDatasetStyle(key: string): string {
 	let newKey: string;
 	switch (key) {
@@ -230,7 +222,6 @@ function translateIdToMatchDatasetStyle(key: string): string {
  * @param key: key of the InsightResult
  * @param value: value of the InsightResult
  */
-
 function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
 	let expectedDatatype: string;
 	switch (key) {
@@ -279,7 +270,6 @@ function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
  * @param expectedTypeOfValue: the expected type of the value
  * @param key: the key of the value, used for error message
  */
-
 function checkIdProperDatatype(value: string | number, expectedTypeOfValue: string, key: string): void {
 	if (typeof value === expectedTypeOfValue) {
 		return;

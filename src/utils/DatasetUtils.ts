@@ -1,6 +1,5 @@
 import {InsightError} from "../controller/IInsightFacade";
 import JSZip from "jszip";
-
 let dataSet: any[] = [];
 
 /**
@@ -89,30 +88,18 @@ function grabData(JSONs: string[], id: string): number {
 			let obj = JSON.parse(val);
 			let result = obj.result;
 			for (const field of result) {
-				let DATASET_ID = id;
-				let COURSE_DEPT = field.Subject;
-				let COURSE_ID = field.Course;
-				let COURSE_AVG = field.Avg;
-				let COURSE_INSTRUCTOR = field.Professor;
-				let COURSE_TITLE = field.Title;
-				let COURSE_PASS = field.Pass;
-				let COURSE_FAIL = field.Fail;
-				let COURSE_AUDIT = field.Audit;
-				let COURSE_UUID = field.id;
-				let COURSE_YEAR = field.Year;
 				if (field.Section === "overall") {
-					COURSE_YEAR = "1900";
+					field.Year = "1900";
 				}
-				let attributes = [DATASET_ID, COURSE_DEPT, COURSE_ID, COURSE_AVG,
-					COURSE_INSTRUCTOR, COURSE_TITLE, COURSE_PASS, COURSE_FAIL,
-					COURSE_AUDIT, COURSE_UUID, COURSE_YEAR];
+				let attributes = [id, field.Subject, field.Course, field.Avg,
+					field.Professor, field.Title, field.Pass, field.Fail,
+					field.Audit, field.id, field.Year];
 				if (isValidSection(attributes)) {
 					dataSet.push(attributes);
 					validSectionsAdded++;
 				}
 			}
-		} catch {
-			// invalid JSON, skip over
+		} catch { // invalid JSON, skip over
 		}
 	}
 	return validSectionsAdded;
@@ -180,22 +167,9 @@ function grabDatasetNames(): Promise<string[]> {
  */
 
 function isValidDatasetIdName(id: string): boolean {
-	// checks if the id is all whitespace
 	const whiteSpaceRegex: RegExp = /^\s*$/;
-	// checks if the id contains an underscore
 	const underScoreRegex: RegExp = /^.*_.*$/;
-
-	// checks if the id is all whitespace and returns false if so
-	if (id.match(whiteSpaceRegex)) {
-		return false;
-	}
-
-	// checks if the id contains an underscore and returns false if so
-	if (id.match(underScoreRegex)) {
-		return false;
-	}
-
-	return true;
+	return !(id.match(whiteSpaceRegex) || id.match(underScoreRegex));
 }
 
 /**
@@ -210,7 +184,6 @@ function isValidDatasetIdName(id: string): boolean {
 
 function translateIdToMatchDatasetStyle(key: string): string {
 	let newKey: string;
-
 	switch (key) {
 		case "courses_dept": {
 			newKey = "dept";
@@ -260,7 +233,6 @@ function translateIdToMatchDatasetStyle(key: string): string {
 
 function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
 	let expectedDatatype: string;
-
 	switch (key) {
 		case "dept": {
 			expectedDatatype = "string";
@@ -296,7 +268,6 @@ function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
 			throw new InsightError("Given an invalid key " + key);
 		}
 	}
-
 	checkIdProperDatatype(value, expectedDatatype, key);
 }
 

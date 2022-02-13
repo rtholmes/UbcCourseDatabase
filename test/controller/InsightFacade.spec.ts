@@ -162,7 +162,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should reject when id is the same as an id of an already added dataset", function() {
-			const content: string = datasetContents.get("courses") ?? "";
+			const content: string = datasetContents.get("skipNonJSON") ?? "";
 			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
 				.then(() => {
 					return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses);

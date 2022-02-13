@@ -1,6 +1,175 @@
 import {InsightError} from "../controller/IInsightFacade";
 import JSZip from "jszip";
 
+let dataSet: any[] = [];
+
+/**
+ * Processes and stores inserted data for InsightFacade
+ *
+ * Promise should fulfill with a string array of all currently added dataset ids
+ * Promise should reject with an InsightError describing the error
+ *
+ * @param content: The content of a database
+ * @param id: The id of a database
+ */
+
+function processData(content: string, id: string): Promise<string[]> {
+	return new Promise((resolve, reject) => {
+		unzipData(content)
+			.then(function (unZippedContent) {
+				return Promise.all(parseData(unZippedContent));
+			})
+			.then(function (JSONs) {
+				if(JSONs.length === 0) {
+					reject(new InsightError("No course folder contents exist"));
+				}
+				let validSectionsAdded = grabData(JSONs, id);
+				if (validSectionsAdded === 0) {
+					reject(new InsightError("No valid sections exist"));
+				}
+				return grabDatasetNames();
+			}).then(function (addedIds) {
+				resolve(addedIds);
+			})
+			.catch(function (err) {
+				reject(err);
+			});
+	});
+}
+
+/**
+ * Unzips content using JSZip
+ *
+ * Promise should fulfill with an updated zip object
+ * Promise should reject with an InsightError describing the error
+ *
+ * @param content: The content of a database
+ */
+
+function unzipData(content: string): Promise<any> {
+	return new Promise((resolve, reject) => {
+		let zip = new JSZip();
+		zip.loadAsync(content, {base64: true}).then(function (result) {
+			resolve(result);
+		}).catch(function () {
+			reject(new InsightError("Given a non zip file"));
+		});
+	});
+}
+
+/**
+ * Reads JSON files in courses folder
+ *
+ * Will return an Array of promises, each containing
+ * readable JSON content from /courses directory of type string
+ *
+ * @param unZippedContent: The unzipped content read from JSZIP
+ */
+
+function parseData(unZippedContent: JSZip): Array<Promise<any>> {
+	let promiseArray: Array<Promise<any>> = [];
+	unZippedContent.folder("courses")?.forEach(((relativePath, file) => {
+		promiseArray.push(file.async("string"));
+	}));
+	return promiseArray;
+}
+
+/**
+ * Grabs relevant fields from valid sections
+ *
+ * Will return the number of valid sections added to database
+ *
+ * @param JSONs: The readable JSON content from /courses directory
+ */
+
+function grabData(JSONs: string[], id: string): number {
+	let validSectionsAdded = 0;
+	for (const val of JSONs) {
+		try {
+			let obj = JSON.parse(val);
+			let result = obj.result;
+			for (const field of result) {
+				let DATASET_ID = id;
+				let COURSE_DEPT = field.Subject;
+				let COURSE_ID = field.Course;
+				let COURSE_AVG = field.Avg;
+				let COURSE_INSTRUCTOR = field.Professor;
+				let COURSE_TITLE = field.Title;
+				let COURSE_PASS = field.Pass;
+				let COURSE_FAIL = field.Fail;
+				let COURSE_AUDIT = field.Audit;
+				let COURSE_UUID = field.id;
+				let COURSE_YEAR = field.Year;
+				if (field.Section === "overall") {
+					COURSE_YEAR = "1900";
+				}
+				let attributes = [DATASET_ID, COURSE_DEPT, COURSE_ID, COURSE_AVG,
+					COURSE_INSTRUCTOR, COURSE_TITLE, COURSE_PASS, COURSE_FAIL,
+					COURSE_AUDIT, COURSE_UUID, COURSE_YEAR];
+				if (isValidSection(attributes)) {
+					dataSet.push(attributes);
+					validSectionsAdded++;
+				}
+			}
+		} catch {
+			// invalid JSON, skip over
+		}
+	}
+	return validSectionsAdded;
+}
+
+/**
+ * Checks if any fields in course section are undefined
+ *
+ * Will return false if any field is undefined,
+ * true otherwise
+ *
+ * @param attributes: The array of fields grabbed from JSONs
+ */
+
+function isValidSection(attributes: any[]): boolean {
+	for (const val of attributes) {
+		if (val === undefined) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/**
+ * Checks if id exists in database
+ *
+ * Will return true if id is unique,
+ * false otherwise
+ *
+ * @param id: The id of a database
+ */
+
+function isExistingDatasetIdName(id: string): boolean {
+	let idArray1: string[] = [];
+	for (let val of dataSet) {
+		idArray1.push(val[0]);
+	}
+	const uniqueSet = new Set(idArray1);
+	return !uniqueSet.has(id);
+}
+
+/**
+ * Grabs all dataset ids from database
+ *
+ * Will return with array of currently added ids
+ */
+
+function grabDatasetNames(): Promise<string[]> {
+	let idArray: string[] = [];
+	for (let val of dataSet) {
+		idArray.push(val[0]);
+	}
+	return new Promise(function (resolve) {
+		resolve(Array.from(new Set(idArray)));
+	});
+}
+
 /**
  * Checks the validity of an id
  * Will return false if an invalid id, else true
@@ -154,5 +323,7 @@ function checkIdProperDatatype(value: string | number, expectedTypeOfValue: stri
 export {
 	translateIdToMatchDatasetStyle,
 	isValidDatasetIdName,
-	checkCorrectTypeOfValueForKey
+	checkCorrectTypeOfValueForKey,
+	processData,
+	isExistingDatasetIdName
 };

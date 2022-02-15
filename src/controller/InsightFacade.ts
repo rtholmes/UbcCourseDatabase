@@ -1,12 +1,7 @@
-import {
-	IInsightFacade,
-	InsightDataset,
-	InsightDatasetKind,
-	InsightError,
-	InsightResult,
-	NotFoundError
-} from "./IInsightFacade";
+import {IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult} from "./IInsightFacade";
 
+import {isValidDatasetIdName, isExistingDatasetIdName, processData} from "../../src/utils/DatasetUtils";
+import JSZip from "jszip";
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
@@ -18,7 +13,25 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		return Promise.reject("Not implemented.");
+		if (!isValidDatasetIdName(id)) {
+			return Promise.reject(new InsightError("Given an invalid id " + id));
+		}
+		if (!isExistingDatasetIdName(id)) {
+			return Promise.reject(new InsightError("Given an already existing id " + id));
+		}
+		if (kind === InsightDatasetKind.Rooms) {
+			return Promise.reject(new InsightError("Given dataset kind Rooms"));
+		}
+
+		return new Promise(function (resolve, reject) {
+			processData(content, id)
+				.then(function (result) {
+					resolve(result);
+				})
+				.catch(function (err) {
+					reject(err);
+				});
+		});
 	}
 
 	public removeDataset(id: string): Promise<string> {

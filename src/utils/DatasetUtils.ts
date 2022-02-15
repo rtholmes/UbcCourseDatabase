@@ -1,5 +1,155 @@
 import {InsightError} from "../controller/IInsightFacade";
 import JSZip from "jszip";
+let dataSet: any[] = [];
+
+/**
+ * Processes and stores inserted data for InsightFacade
+ *
+ * Promise should fulfill with a string array of all currently added dataset ids
+ * Promise should reject with an InsightError describing the error
+ *
+ * @param content: The content of a database
+ * @param id: The id of a database
+ */
+function processData(content: string, id: string): Promise<string[]> {
+	return new Promise((resolve, reject) => {
+		unzipData(content)
+			.then(function (unZippedContent) {
+				return Promise.all(parseData(unZippedContent));
+			})
+			.then(function (JSONs) {
+				if(JSONs.length === 0) {
+					reject(new InsightError("No course folder contents exist"));
+				}
+				let validSectionsAdded = grabData(JSONs, id);
+				if (validSectionsAdded === 0) {
+					reject(new InsightError("No valid sections exist"));
+				}
+				return grabDatasetNames();
+			}).then(function (addedIds) {
+				resolve(addedIds);
+			})
+			.catch(function (err) {
+				reject(err);
+			});
+	});
+}
+
+/**
+ * Unzips content using JSZip
+ *
+ * Promise should fulfill with an updated zip object
+ * Promise should reject with an InsightError describing the error
+ *
+ * @param content: The content of a database
+ */
+function unzipData(content: string): Promise<any> {
+	return new Promise((resolve, reject) => {
+		let zip = new JSZip();
+		zip.loadAsync(content, {base64: true}).then(function (result) {
+			resolve(result);
+		}).catch(function () {
+			reject(new InsightError("Given a non zip file"));
+		});
+	});
+}
+
+/**
+ * Reads JSON files in courses folder
+ *
+ * Will return an Array of promises, each containing
+ * readable JSON content from /courses directory of type string
+ *
+ * @param unZippedContent: The unzipped content read from JSZIP
+ */
+function parseData(unZippedContent: JSZip): Array<Promise<any>> {
+	let promiseArray: Array<Promise<any>> = [];
+	unZippedContent.folder("courses")?.forEach(((relativePath, file) => {
+		promiseArray.push(file.async("string"));
+	}));
+	return promiseArray;
+}
+
+/**
+ * Grabs relevant fields from valid sections
+ *
+ * Will return the number of valid sections added to database
+ *
+ * @param JSONs: The readable JSON content from /courses directory
+ * @param id: The id of a database
+ */
+function grabData(JSONs: string[], id: string): number {
+	let validSectionsAdded = 0;
+	for (const val of JSONs) {
+		try {
+			let obj = JSON.parse(val);
+			let result = obj.result;
+			for (const field of result) {
+				if (field.Section === "overall") {
+					field.Year = "1900";
+				}
+				let attributes = [id, field.Subject, field.Course, field.Avg,
+					field.Professor, field.Title, field.Pass, field.Fail,
+					field.Audit, field.id, field.Year];
+				if (isValidSection(attributes)) {
+					dataSet.push(attributes);
+					validSectionsAdded++;
+				}
+			}
+		} catch { // invalid JSON, skip over
+		}
+	}
+	return validSectionsAdded;
+}
+
+/**
+ * Checks if any fields in course section are undefined
+ *
+ * Will return false if any field is undefined,
+ * true otherwise
+ *
+ * @param attributes: The array of fields grabbed from JSONs
+ */
+function isValidSection(attributes: any[]): boolean {
+	for (const val of attributes) {
+		if (val === undefined) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/**
+ * Checks if id exists in database
+ *
+ * Will return true if id is unique,
+ * false otherwise
+ *
+ * @param id: The id of a database
+ */
+function isExistingDatasetIdName(id: string): boolean {
+	let idArray1: string[] = [];
+	for (let val of dataSet) {
+		idArray1.push(val[0]);
+	}
+	const uniqueSet = new Set(idArray1);
+	return !uniqueSet.has(id);
+}
+
+/**
+ * Grabs all dataset ids from database
+ *
+ * Will return with array of currently added ids
+ */
+function grabDatasetNames(): Promise<string[]> {
+	let idArray: string[] = [];
+	for (let val of dataSet) {
+		idArray.push(val[0]);
+	}
+	return new Promise(function (resolve) {
+		resolve(Array.from(new Set(idArray)));
+	});
+}
 
 /**
  * Checks the validity of an id
@@ -9,24 +159,10 @@ import JSZip from "jszip";
  *
  * @param id: The id of a database
  */
-
 function isValidDatasetIdName(id: string): boolean {
-	// checks if the id is all whitespace
 	const whiteSpaceRegex: RegExp = /^\s*$/;
-	// checks if the id contains an underscore
 	const underScoreRegex: RegExp = /^.*_.*$/;
-
-	// checks if the id is all whitespace and returns false if so
-	if (id.match(whiteSpaceRegex)) {
-		return false;
-	}
-
-	// checks if the id contains an underscore and returns false if so
-	if (id.match(underScoreRegex)) {
-		return false;
-	}
-
-	return true;
+	return !(id.match(whiteSpaceRegex) || id.match(underScoreRegex));
 }
 
 /**
@@ -38,10 +174,8 @@ function isValidDatasetIdName(id: string): boolean {
  * @param key: The key of the InsightResult
  *
  */
-
 function translateIdToMatchDatasetStyle(key: string): string {
 	let newKey: string;
-
 	switch (key) {
 		case "courses_dept": {
 			newKey = "dept";
@@ -88,10 +222,8 @@ function translateIdToMatchDatasetStyle(key: string): string {
  * @param key: key of the InsightResult
  * @param value: value of the InsightResult
  */
-
 function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
 	let expectedDatatype: string;
-
 	switch (key) {
 		case "dept": {
 			expectedDatatype = "string";
@@ -127,7 +259,6 @@ function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
 			throw new InsightError("Given an invalid key " + key);
 		}
 	}
-
 	checkIdProperDatatype(value, expectedDatatype, key);
 }
 
@@ -139,7 +270,6 @@ function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
  * @param expectedTypeOfValue: the expected type of the value
  * @param key: the key of the value, used for error message
  */
-
 function checkIdProperDatatype(value: string | number, expectedTypeOfValue: string, key: string): void {
 	if (typeof value === expectedTypeOfValue) {
 		return;
@@ -151,4 +281,10 @@ function checkIdProperDatatype(value: string | number, expectedTypeOfValue: stri
 	}
 }
 
-export {translateIdToMatchDatasetStyle, isValidDatasetIdName, checkCorrectTypeOfValueForKey};
+export {
+	translateIdToMatchDatasetStyle,
+	isValidDatasetIdName,
+	checkCorrectTypeOfValueForKey,
+	processData,
+	isExistingDatasetIdName
+};

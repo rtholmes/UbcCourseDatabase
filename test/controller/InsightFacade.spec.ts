@@ -439,9 +439,12 @@ describe("InsightFacade", function () {
 	 */
 	describe("PerformQuery", () => {
 		before(function () {
+
 			console.info(`Before: ${this.test?.parent?.title}`);
 
 			insightFacade = new InsightFacade();
+			// eslint-disable-next-line max-len
+			insightFacade.performQuery({WHERE:{GT:{courses_avg:97}},OPTIONS:{COLUMNS:["courses_dept","courses_avg"],ORDER:"courses_avg"}});
 
 			// Load the datasets specified in datasetsToQuery and add them to InsightFacade.
 			// Will *fail* if there is a problem reading ANY dataset.

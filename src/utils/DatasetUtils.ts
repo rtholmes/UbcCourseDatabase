@@ -1,5 +1,4 @@
 import {InsightError} from "../controller/IInsightFacade";
-import JSZip from "jszip";
 
 /**
  * Checks the validity of an id
@@ -8,25 +7,11 @@ import JSZip from "jszip";
  * An invalid id is one which contains an underscore or is all whitespace
  *
  * @param id: The id of a database
- */
-
+ * */
 function isValidDatasetIdName(id: string): boolean {
-	// checks if the id is all whitespace
 	const whiteSpaceRegex: RegExp = /^\s*$/;
-	// checks if the id contains an underscore
 	const underScoreRegex: RegExp = /^.*_.*$/;
-
-	// checks if the id is all whitespace and returns false if so
-	if (id.match(whiteSpaceRegex)) {
-		return false;
-	}
-
-	// checks if the id contains an underscore and returns false if so
-	if (id.match(underScoreRegex)) {
-		return false;
-	}
-
-	return true;
+	return !(id.match(whiteSpaceRegex) || id.match(underScoreRegex));
 }
 
 /**
@@ -38,42 +23,50 @@ function isValidDatasetIdName(id: string): boolean {
  * @param key: The key of the InsightResult
  *
  */
-
 function translateIdToMatchDatasetStyle(key: string): string {
 	let newKey: string;
-
 	switch (key) {
 		case "courses_dept": {
 			newKey = "dept";
 			break;
-		} case "courses_id": {
+		}
+		case "courses_id": {
 			newKey = "id";
 			break;
-		} case "courses_avg": {
+		}
+		case "courses_avg": {
 			newKey = "avg";
 			break;
-		} case "courses_instructor": {
+		}
+		case "courses_instructor": {
 			newKey = "instructor";
 			break;
-		} case "courses_title": {
+		}
+		case "courses_title": {
 			newKey = "title";
 			break;
-		} case "courses_pass": {
+		}
+		case "courses_pass": {
 			newKey = "pass";
 			break;
-		} case "courses_fail": {
+		}
+		case "courses_fail": {
 			newKey = "fail";
 			break;
-		} case "courses_audit": {
+		}
+		case "courses_audit": {
 			newKey = "audit";
 			break;
-		} case "courses_uuid": {
+		}
+		case "courses_uuid": {
 			newKey = "uuid";
 			break;
-		} case "courses_year": {
+		}
+		case "courses_year": {
 			newKey = "year";
 			break;
-		} default: {
+		}
+		default: {
 			throw new InsightError("Given an invalid key " + key);
 		}
 	}
@@ -88,58 +81,64 @@ function translateIdToMatchDatasetStyle(key: string): string {
  * @param key: key of the InsightResult
  * @param value: value of the InsightResult
  */
-
 function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
 	let expectedDatatype: string;
-
 	switch (key) {
 		case "dept": {
 			expectedDatatype = "string";
 			break;
-		} case "id": {
+		}
+		case "id": {
 			expectedDatatype = "string";
 			break;
-		} case "avg": {
+		}
+		case "avg": {
 			expectedDatatype = "number";
 			break;
-		} case "instructor": {
+		}
+		case "instructor": {
 			expectedDatatype = "string";
 			break;
-		} case "title": {
+		}
+		case "title": {
 			expectedDatatype = "string";
 			break;
-		} case "pass": {
+		}
+		case "pass": {
 			expectedDatatype = "number";
 			break;
-		} case "fail": {
+		}
+		case "fail": {
 			expectedDatatype = "number";
 			break;
-		} case "audit": {
+		}
+		case "audit": {
 			expectedDatatype = "number";
 			break;
-		} case "uuid": {
+		}
+		case "uuid": {
 			expectedDatatype = "string";
 			break;
-		} case "year": {
+		}
+		case "year": {
 			expectedDatatype = "number";
 			break;
-		} default: {
+		}
+		default: {
 			throw new InsightError("Given an invalid key " + key);
 		}
 	}
-
 	checkIdProperDatatype(value, expectedDatatype, key);
 }
 
-/**
- * Returns if the expected and actual values types match up
- * Otherwise throws and InsightError
- *
- * @param value: original value
- * @param expectedTypeOfValue: the expected type of the value
- * @param key: the key of the value, used for error message
- */
-
+	/**
+	 * Returns if the expected and actual values types match up
+	 * Otherwise throws and InsightError
+	 *
+	 * @param value: original value
+	 * @param expectedTypeOfValue: the expected type of the value
+	 * @param key: the key of the value, used for error message
+	 */
 function checkIdProperDatatype(value: string | number, expectedTypeOfValue: string, key: string): void {
 	if (typeof value === expectedTypeOfValue) {
 		return;
@@ -151,4 +150,9 @@ function checkIdProperDatatype(value: string | number, expectedTypeOfValue: stri
 	}
 }
 
-export {translateIdToMatchDatasetStyle, isValidDatasetIdName, checkCorrectTypeOfValueForKey};
+export {
+	isValidDatasetIdName,
+	translateIdToMatchDatasetStyle,
+	checkCorrectTypeOfValueForKey,
+	checkIdProperDatatype
+};

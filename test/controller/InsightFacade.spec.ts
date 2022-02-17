@@ -62,16 +62,6 @@ describe("InsightFacade", function () {
 			fs.removeSync(persistDir);
 		});
 
-		// This is a unit test. You should create more like this!
-		it("Should add a valid dataset", function () {
-			const id: string = "courses";
-			const content: string = datasetContents.get("courses") ?? "";
-			const expected: string[] = [id];
-			return insightFacade.addDataset(id, content, InsightDatasetKind.Courses).then((result: string[]) => {
-				expect(result).to.deep.equal(expected);
-			});
-		});
-
 		it("should add a dataset successfully", function() {
 			const content: string = datasetContents.get("courses") ?? "";
 			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
@@ -89,16 +79,16 @@ describe("InsightFacade", function () {
 
 		it("should add multiple datasets successfully", function() {
 			const content: string = datasetContents.get("courses") ?? "";
-			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
+			return insightFacade.addDataset("courses1", content, InsightDatasetKind.Courses)
 				.then(() => {
 					return insightFacade.addDataset("courses2", content, InsightDatasetKind.Courses);
 				})
 				.then((dataIDS) => {
 					expect(dataIDS).to.be.an.instanceof(Array);
-					expect(dataIDS).to.have.length(2);
-					const insightDatasetCourses = dataIDS.find((dataID) => dataID === "courses");
+					expect(dataIDS).to.be.of.length(2);
+					const insightDatasetCourses = dataIDS.find((dataID) => dataID === "courses1");
 					expect(insightDatasetCourses).to.exist;
-					expect(insightDatasetCourses).to.equal("courses");
+					expect(insightDatasetCourses).to.equal("courses1");
 					const insightDatasetCourses2 = dataIDS.find((dataID) => dataID === "courses2");
 					expect(insightDatasetCourses2).to.exist;
 					expect(insightDatasetCourses2).to.equal("courses2");
@@ -110,13 +100,11 @@ describe("InsightFacade", function () {
 
 		it("should reject add when id is empty", function() {
 			const content: string = datasetContents.get("courses") ?? "";
-			return insightFacade.addDataset("", content, InsightDatasetKind.Courses)
-				.then(() => {
-					expect.fail("Should not execute");
-				})
-				.catch((err) => {
-					expect(err).to.be.an.instanceof(InsightError);
-				});
+			return insightFacade.addDataset("", content, InsightDatasetKind.Courses).then(() => {
+				expect.fail("Should not execute");
+			}).catch((err) => {
+				expect(err).to.be.an.instanceof(InsightError);
+			});
 		});
 
 		it("should reject add when id is white space", function() {
@@ -154,7 +142,7 @@ describe("InsightFacade", function () {
 
 		it("should reject when dataset kind is rooms", function() {
 			const content: string = datasetContents.get("courses") ?? "";
-			return insightFacade.addDataset("courses", content, InsightDatasetKind.Rooms)
+			return insightFacade.addDataset("rooms", content, InsightDatasetKind.Rooms)
 				.then(() => {
 					expect.fail("Should not execute");
 				})
@@ -179,7 +167,7 @@ describe("InsightFacade", function () {
 
 		it("should reject non zip files", function() {
 			const content: string = datasetContents.get("nonZip") ?? "";
-			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
+			return insightFacade.addDataset("nonZip", content, InsightDatasetKind.Courses)
 				.then(() => {
 					expect.fail("Should not execute");
 				})
@@ -190,7 +178,7 @@ describe("InsightFacade", function () {
 
 		it("should reject zip files without a courses folder", function() {
 			const content: string = datasetContents.get("rooms") ?? "";
-			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
+			return insightFacade.addDataset("rooms", content, InsightDatasetKind.Courses)
 				.then(() => {
 					expect.fail("Should not execute");
 				})
@@ -201,7 +189,7 @@ describe("InsightFacade", function () {
 
 		it("should reject zip files with an empty courses folder", function() {
 			const content: string = datasetContents.get("noCourses") ?? "";
-			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
+			return insightFacade.addDataset("noCourses", content, InsightDatasetKind.Courses)
 				.then(() => {
 					expect.fail("Should not execute");
 				})
@@ -212,7 +200,7 @@ describe("InsightFacade", function () {
 
 		it("should reject single invalid JSON", function() {
 			const content: string = datasetContents.get("singleInvalidJSON") ?? "";
-			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
+			return insightFacade.addDataset("singleInvalidJSON", content, InsightDatasetKind.Courses)
 				.then(() => {
 					expect.fail("Should not execute");
 				})
@@ -223,13 +211,13 @@ describe("InsightFacade", function () {
 
 		it("should skip over any non JSON files", function() {
 			const content: string = datasetContents.get("skipNonJSON") ?? "";
-			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
+			return insightFacade.addDataset("skipNonJSON", content, InsightDatasetKind.Courses)
 				.then(() => {
 					return insightFacade.listDatasets().then((insightDatasets) => {
 						expect(insightDatasets).to.be.an.instanceof(Array);
 						expect(insightDatasets).to.have.length(1);
 						expect(insightDatasets).to.deep.equal([{
-							id: "courses",
+							id: "skipNonJSON",
 							kind: InsightDatasetKind.Courses,
 							numRows: 58,
 						}]);
@@ -242,13 +230,13 @@ describe("InsightFacade", function () {
 
 		it("should skip invalid JSON files", function () {
 			const content: string = datasetContents.get("skipInvalidJSON") ?? "";
-			return insightFacade.addDataset("courses", content, InsightDatasetKind.Courses)
+			return insightFacade.addDataset("skipInvalidJSON", content, InsightDatasetKind.Courses)
 				.then(() => {
 					return insightFacade.listDatasets().then((insightDatasets) => {
 						expect(insightDatasets).to.be.an.instanceof(Array);
 						expect(insightDatasets).to.have.length(1);
 						expect(insightDatasets).to.deep.equal([{
-							id: "courses",
+							id: "skipInvalidJSON",
 							kind: InsightDatasetKind.Courses,
 							numRows: 58,
 						}]);
@@ -439,12 +427,9 @@ describe("InsightFacade", function () {
 	 */
 	describe("PerformQuery", () => {
 		before(function () {
-
 			console.info(`Before: ${this.test?.parent?.title}`);
 
 			insightFacade = new InsightFacade();
-			// eslint-disable-next-line max-len
-			insightFacade.performQuery({WHERE:{GT:{courses_avg:97}},OPTIONS:{COLUMNS:["courses_dept","courses_avg"],ORDER:"courses_avg"}});
 
 			// Load the datasets specified in datasetsToQuery and add them to InsightFacade.
 			// Will *fail* if there is a problem reading ANY dataset.

@@ -85,6 +85,7 @@ describe("InsightFacade", function () {
 				})
 				.then((dataIDS) => {
 					expect(dataIDS).to.be.an.instanceof(Array);
+					expect(dataIDS).to.be.of.length(2);
 					const insightDatasetCourses = dataIDS.find((dataID) => dataID === "courses1");
 					expect(insightDatasetCourses).to.exist;
 					expect(insightDatasetCourses).to.equal("courses1");
@@ -141,7 +142,7 @@ describe("InsightFacade", function () {
 
 		it("should reject when dataset kind is rooms", function() {
 			const content: string = datasetContents.get("courses") ?? "";
-			return insightFacade.addDataset("rooms1", content, InsightDatasetKind.Rooms)
+			return insightFacade.addDataset("rooms", content, InsightDatasetKind.Rooms)
 				.then(() => {
 					expect.fail("Should not execute");
 				})
@@ -177,7 +178,7 @@ describe("InsightFacade", function () {
 
 		it("should reject zip files without a courses folder", function() {
 			const content: string = datasetContents.get("rooms") ?? "";
-			return insightFacade.addDataset("rooms2", content, InsightDatasetKind.Courses)
+			return insightFacade.addDataset("rooms", content, InsightDatasetKind.Courses)
 				.then(() => {
 					expect.fail("Should not execute");
 				})

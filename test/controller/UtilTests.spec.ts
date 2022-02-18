@@ -4,7 +4,7 @@ import {
 	checkCorrectTypeOfValueForKey,
 	isValidDatasetIdName,
 	translateIdToMatchDatasetStyle
-} from "../../project_team678/src/utils/DatasetUtils";
+} from "../../src/utils/DatasetUtils";
 
 
 describe( "Dataset Util Tests", function () {

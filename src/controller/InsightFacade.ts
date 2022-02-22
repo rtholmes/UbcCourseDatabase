@@ -8,7 +8,13 @@ import {
 	NotFoundError, Query
 } from "./IInsightFacade";
 
-import {getDatasetIdFromQuery, isValidQuery, queryDatabase} from "../utils/QueryUtils";
+import {
+	getDatasetIdFromQuery,
+	isValidQuery,
+	jsonToFilter,
+	queryDatabase,
+	verifyCorrectTypes
+} from "../utils/QueryUtils";
 
 import {isValidDatasetIdName} from "../../src/utils/DatasetUtils";
 import CourseHandler from "../utils/CourseHandler";
@@ -85,7 +91,7 @@ export default class InsightFacade implements IInsightFacade {
 	 */
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
-		let obj: any;
+		let obj;
 
 		if (typeof query === "string") {
 			obj = JSON.parse(query);
@@ -100,13 +106,17 @@ export default class InsightFacade implements IInsightFacade {
 		//  '{"WHERE":{"GT":{"courses_avg":97}},"OPTIONS":{"COLUMNS":["courses_dept","courses_avg"],"ORDER":"courses_avg"}}'
 
 		// Object { WHERE: Object { GT: Object { courses_avg: 97 } }, OPTIONS: Object { COLUMNS: Array ["courses_dept", "courses_avg"], ORDER: "courses_avg" } }
-		let where: Filter = obj.WHERE;
+		let where: Filter = jsonToFilter(obj.WHERE);
 		let columns: string[] = obj.OPTIONS.COLUMNS;
 		let order: string = obj.OPTIONS.ORDER;
 
-		let queer: Query = new Query(where, columns, order);
+		verifyCorrectTypes(where, columns, order);
 
+		let queer: Query = new Query(where, columns, order);
 		let id: string = getDatasetIdFromQuery(queer);
+
+		// runQuery(queer);
+		// organizeQuery(queer);
 
 		queer.query();
 

@@ -437,6 +437,36 @@ describe("InsightFacade", function () {
 				insightFacade.addDataset("courses", datasetContents.get("courses") ?? "", InsightDatasetKind.Courses),
 			];
 
+			insightFacade.performQuery({
+				WHERE: {
+					AND: [
+						{
+							IS: {
+								courses_dept: "cpsc"
+							}
+						},
+						{
+							IS: {
+								courses_id: "110"
+							}
+						},
+						{
+							EQ: {
+								courses_avg: 72.63
+							}
+						}
+					]
+				},
+				OPTIONS: {
+					COLUMNS: [
+						"courses_dept",
+						"courses_id",
+						"courses_year"
+					],
+					ORDER: "courses_year"
+				}
+			});
+
 			return Promise.all(loadDatasetPromises);
 		});
 

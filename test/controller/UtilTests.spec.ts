@@ -1,10 +1,10 @@
 import {assert, expect} from "chai";
+import {InsightError} from "../../src/controller/IInsightFacade";
 import {
 	checkCorrectTypeOfValueForKey,
 	isValidDatasetIdName,
 	translateIdToMatchDatasetStyle
 } from "../../src/utils/DatasetUtils";
-import {InsightError} from "../../src/controller/IInsightFacade";
 
 
 describe( "Dataset Util Tests", function () {

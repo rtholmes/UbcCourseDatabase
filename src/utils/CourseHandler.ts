@@ -105,8 +105,8 @@ export default class CourseHandler {
 						field.Pass,
 						field.Fail,
 						field.Audit,
-						field.id,
-						field.Year
+						String(field.id),
+						Number(field.Year)
 					];
 					if (this.isValidSection(attributes)) {
 						this.coursesDataset.push(attributes);
@@ -233,6 +233,17 @@ export default class CourseHandler {
 		}
 		return new Promise(function (resolve) {
 			resolve(addedInsightDatasets);
+		});
+	}
+
+	public getDataFromDiskGivenId(id: string): Promise<Array<Array<string | number>>> {
+		return new Promise(function (resolve, reject) {
+			if (fs.existsSync("./data/")) {
+				let path: string = "./data/" + id + ".txt";
+				resolve(JSON.parse(fs.readFileSync(path,"utf8")));
+			} else {
+				reject(new InsightError(`Could not find data in folder with id: ${id}`));
+			}
 		});
 	}
 }

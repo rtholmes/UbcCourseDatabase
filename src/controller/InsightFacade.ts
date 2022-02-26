@@ -1,24 +1,20 @@
 import {
-	Filter,
 	IInsightFacade,
 	InsightDataset,
 	InsightDatasetKind,
 	InsightError,
 	InsightResult,
-	NotFoundError, Query
+	ResultTooLargeError
 } from "./IInsightFacade";
 
 import {
-	getDatasetIdFromQuery,
-	isValidQuery,
-	jsonToFilter,
-	queryDatabase,
-	verifyCorrectTypes
+	getPromiseOfDatasetIdFromQuery,
+	jsonToFilter, toInsightResult
 } from "../utils/QueryUtils";
 
-import {isValidDatasetIdName} from "../../src/utils/DatasetUtils";
+import {isValidDatasetIdName} from "../utils/DatasetUtils";
 import CourseHandler from "../utils/CourseHandler";
-import JSZip from "jszip";
+import {Filter, Query} from "../utils/Query";
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
@@ -73,25 +69,8 @@ export default class InsightFacade implements IInsightFacade {
 		});
 	}
 
-	/*
-		{
-			"WHERE":{
-			   "GT":{
-				  "courses_avg":97
-			   }
-			},
-			"OPTIONS":{
-			   "COLUMNS":[
-				  "courses_dept",
-				  "courses_avg"
-			   ],
-			   "ORDER":"courses_avg"
-			}
-		}
-	 */
-
 	public performQuery(query: unknown): Promise<InsightResult[]> {
-		let obj;
+		let obj: any;
 
 		if (typeof query === "string") {
 			obj = JSON.parse(query);
@@ -99,29 +78,46 @@ export default class InsightFacade implements IInsightFacade {
 			let jsonStr: string = JSON.stringify(query);
 			obj = JSON.parse(jsonStr);
 		} else {
-			throw new InsightError("Given invalid query format");
+			return Promise.reject(new InsightError("Given invalid query format"));
 		}
 
+		return new Promise((resolve, reject) => {
+			if (obj.OPTIONS === undefined) {
+				reject(new InsightError("OPTIONS undefined"));
+			}
 
-		//  '{"WHERE":{"GT":{"courses_avg":97}},"OPTIONS":{"COLUMNS":["courses_dept","courses_avg"],"ORDER":"courses_avg"}}'
+			let where: Filter = obj.WHERE;
+			let columns: string[] = obj.OPTIONS.COLUMNS;
+			let order: string = obj.OPTIONS.ORDER;
+			if (where === undefined ||
+				columns === undefined ||
+				columns.length === 0 ||
+				order === undefined ||
+				order.length === 0) {
+				reject(new InsightError("Invalid query"));
+			}
 
-		// Object { WHERE: Object { GT: Object { courses_avg: 97 } }, OPTIONS: Object { COLUMNS: Array ["courses_dept", "courses_avg"], ORDER: "courses_avg" } }
-		let where: Filter = jsonToFilter(obj.WHERE);
-		let columns: string[] = obj.OPTIONS.COLUMNS;
-		let order: string = obj.OPTIONS.ORDER;
-
-		verifyCorrectTypes(where, columns, order);
-
-		let queer: Query = new Query(where, columns, order);
-		let id: string = getDatasetIdFromQuery(queer);
-
-		// runQuery(queer);
-		// organizeQuery(queer);
-
-		queer.query();
-
-
-		return Promise.reject("Not implemented.");
+			let queer: Query;
+			jsonToFilter(where).then((filter) => {
+				queer = new Query(filter, columns, order);
+				return getPromiseOfDatasetIdFromQuery(queer);
+			}).then((id) => {
+				return this.DatasetHandler.getDataFromDiskGivenId(id);
+			}).then((data) => {
+				return queer.query(data);
+			}).then((queriedData) => {
+				if (queriedData.length > 5000) {
+					reject(new ResultTooLargeError());
+				}
+				return queer.organizeSections(queriedData);
+			}).then((organizedData) => {
+				return queer.truncateSections(organizedData);
+			}).then((truncatedData) => {
+				resolve(toInsightResult(queer.columns, truncatedData));
+			}).catch(() => {
+				reject(new InsightError());
+			});
+		});
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {

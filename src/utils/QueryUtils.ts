@@ -1,32 +1,18 @@
 import {
-	Filter,
 	InsightError,
-	LogicComparison,
-	MComparison,
-	Negation,
-	Query,
-	SComparison
+	InsightResult
 } from "../controller/IInsightFacade";
+import {checkCorrectTypeOfValueForKey} from "./DatasetUtils";
+import {Filter, LogicComparison, MComparison, Negation, Query, SComparison} from "./Query";
 
-function isValidQuery(query: unknown): boolean {
-	// stub
-	return false;
-}
-
-function queryDatabase(query: Query) {
-	let datasetId: string = getDatasetIdFromQuery(query);
-
-
-}
-
-function jsonToFilter(obj: any): Filter {
-	let returnValue: Filter;
+function jsonToFilter(obj: any): Promise<Filter> {
+	let returnValue: Filter | undefined;
 	if (obj.GT !== undefined) {
 		returnValue = mCompareConstructor("GT", obj.GT);
 	} else if (obj.LT !== undefined) {
-		returnValue = mCompareConstructor("GT", obj.LT);
+		returnValue = mCompareConstructor("LT", obj.LT);
 	} else if (obj.EQ !== undefined) {
-		returnValue = mCompareConstructor("GT", obj.EQ);
+		returnValue = mCompareConstructor("EQ", obj.EQ);
 	} else if (obj.AND !== undefined) {
 		returnValue = logicComparisonConstructor("AND", obj.AND);
 	} else if (obj.OR !== undefined) {
@@ -34,25 +20,37 @@ function jsonToFilter(obj: any): Filter {
 	} else if (obj.IS !== undefined) {
 		returnValue = sCompareConstructor(obj.IS);
 	} else if (obj.NOT !== undefined) {
-		returnValue = negationConstructor(obj.NOT);
+		return new Promise((resolve) => {
+			resolve(negationConstructor(obj.NOT));
+		});
 	} else {
-		throw new InsightError("Not a valid filter");
+		returnValue = undefined;
 	}
 
-	return returnValue;
+	return new Promise(function (resolve, reject) {
+		if (returnValue === undefined) {
+			reject(new InsightError("Not a valid filter"));
+		} else {
+			resolve(returnValue);
+		}
+	});
 }
 
-function negationConstructor(obj: any): Negation {
-	let arr: Filter = jsonToFilter(obj);
+function negationConstructor(obj: any): Promise<Negation> {
 
-	for (let field of obj) {
-		arr = jsonToFilter(field);
+	if (JSON.stringify(obj) === "{}") {
+		throw new InsightError("Given empty filter list for logic comparison");
 	}
 
-	return {
-		i: 0,
-		filter: arr
-	};
+	return new Promise((resolve) => {
+		jsonToFilter(obj).then((temp) => {
+			if (temp === undefined) {
+				throw new InsightError();
+			}
+
+			resolve(new Negation(temp));
+		});
+	});
 }
 
 
@@ -71,11 +69,15 @@ function sCompareConstructor(obj: any): SComparison {
 		  	input string: ${typeof tempInputString}`);
 	}
 
-	return {
-		i: 0,
-		sKey: tempSKey,
-		inputString: tempInputString
-	};
+	checkCorrectTypeOfValueForKey(getKeyFromIdKey(tempSKey), tempInputString);
+	Query.isRepeatDataId(getDatasetIdFromString(tempSKey));
+
+	const asteriskRegex: RegExp = /^.*[*].*$/;
+	if (tempInputString.match(asteriskRegex)) {
+		throw new InsightError("input string contained an * inputString:" + tempInputString);
+	}
+
+	return new SComparison(tempSKey, tempInputString);
 }
 function mCompareConstructor(comp: string, obj: any): MComparison {
 	let tempMKey: any;
@@ -92,44 +94,28 @@ function mCompareConstructor(comp: string, obj: any): MComparison {
 		  	number: ${typeof tempNum}`);
 	}
 
-	return {
-		i: 0,
-		comparator: comp,
-		mKey: tempMKey,
-		num: tempNum
-	};
+	checkCorrectTypeOfValueForKey(getKeyFromIdKey(tempMKey), tempNum);
+	Query.isRepeatDataId(getDatasetIdFromString(tempMKey));
+	return new MComparison(comp, tempMKey, tempNum);
 }
 
 function logicComparisonConstructor(log: string, obj: object[]): LogicComparison {
 	let arr: Filter[] = [];
 
+	if (obj.length === 0 ) {
+		throw new InsightError("Given empty filter list for logic comparison");
+	}
+
 	for (let field of obj) {
-		let temp = jsonToFilter(field);
-		arr.push(temp);
+		jsonToFilter(field).then((temp) => {
+			arr.push(temp);
+		});
 	}
 
-	return {
-		i: 0,
-		logic: log,
-		filters: arr
-	};
+	return new LogicComparison(log, arr);
 }
 
-function verifyCorrectTypes(where: unknown, columns: unknown, order: unknown) {
-	if (!(typeof where === "object")) {
-		throw new InsightError("Invalid type for WHERE is type " + typeof where);
-	}
-
-	if (!Array.isArray(columns)) {
-		throw new InsightError("COLUMNS is not an array, is " + typeof columns);
-	}
-
-	if (!(typeof order === "string")) {
-		throw new InsightError("ORDER is not type string, is " + typeof order);
-	}
-}
-
-function getDatasetIdFromQuery(query: Query): string {
+function getPromiseOfDatasetIdFromQuery(query: Query): Promise<string> {
 	let queryKey: string = query.order;
 	let underScorePos: number =  queryKey.indexOf("_");
 
@@ -141,8 +127,122 @@ function getDatasetIdFromQuery(query: Query): string {
 	}
 
 	// returns just <dataset_id>
-	return queryKey.slice(0, underScorePos);
+	return new Promise(function (resolve, reject) {
+		if (underScorePos === -1) {
+			reject(new InsightError("Invalid query key, \n" +
+				" expects: <dataset_id>_<dataset_key>, \n" +
+				" actual: " + queryKey));
+		} else {
+			resolve(queryKey.slice(0, underScorePos));
+		}
+	});
 }
 
+function getDatasetIdFromString(str: string): string {
+	let underScorePos: number =  str.indexOf("_");
 
-export{isValidQuery, queryDatabase, verifyCorrectTypes, getDatasetIdFromQuery, jsonToFilter};
+	// -1 means that the value was not found therefore it was an invalid query
+	if (underScorePos === -1) {
+		throw new InsightError("Invalid query key, \n" +
+			" expects: <dataset_id>_<dataset_key>, \n" +
+			" actual: " + str);
+	}
+
+	if (underScorePos === -1) {
+		throw new InsightError("Invalid query key, \n" +
+			" expects: <dataset_id>_<dataset_key>, \n" +
+			" actual: " + str);
+	} else {
+		return str.slice(0, underScorePos);
+	}
+}
+
+function getKeyFromIdKey(str: string): string {
+	let underScorePos: number =  str.indexOf("_");
+
+	// -1 means that the value was not found therefore it was an invalid query
+	if (underScorePos === -1) {
+		throw new InsightError("Invalid query key, \n" +
+			" expects: <dataset_id>_<dataset_key>, \n" +
+			" actual: " + str);
+	}
+
+	return str.slice(underScorePos + 1);
+}
+
+function getIndexOfGivenAttribute(str: string): number {
+	let attributes = [
+		"dept",
+		"id",
+		"avg",
+		"instructor",
+		"title",
+		"pass",
+		"fail",
+		"audit",
+		"uuid",
+		"year"
+	];
+
+	return attributes.indexOf(str);
+}
+
+function queryAllFilters(filters: Filter[], data: Array<Array<string | number>>):
+	Promise<Array<Array<Array<string | number>>>> {
+	return new Promise(function (resolve) {
+		let multiArr: Array<Array<Array<string | number>>> = [];
+		for (let filter of filters) {
+			filter.query(data).then((returnVal) => {
+				multiArr.push(returnVal);
+			});
+		}
+		resolve(multiArr);
+	});
+}
+
+function toInsightResult(columns: string[], data: Array<Array<string | number>>): Promise<InsightResult[]> {
+	return new Promise((resolve) => {
+		let temp: number[] = fun(columns);
+		let returnVal: InsightResult[] = [];
+		for (let entry of data) {
+			let temp12: {[key: string]: string | number} = {};
+			for (let temp4 of temp) {
+				temp12[columns[temp4]] = entry[temp4];
+			}
+			returnVal.push(temp12);
+		}
+
+		resolve(returnVal);
+	});
+}
+
+function fun(columns: string[]): number[] {
+	let returnVal: number[] = [];
+
+	let attributes = [
+		"dept",
+		"courses",
+		"avg",
+		"instructor",
+		"title",
+		"pass",
+		"fail",
+		"audit",
+		"id",
+		"year"
+	];
+
+	for (let temp of columns) {
+		let temp2: string = getKeyFromIdKey(temp);
+		returnVal.push(attributes.indexOf(temp2));
+	}
+
+	returnVal = returnVal.map((value, index) => {
+		return index;
+	});
+
+	return returnVal;
+}
+
+export{getPromiseOfDatasetIdFromQuery, getKeyFromIdKey, jsonToFilter,
+	getIndexOfGivenAttribute, queryAllFilters, toInsightResult, getDatasetIdFromString};

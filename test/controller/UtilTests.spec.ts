@@ -5,7 +5,6 @@ import {
 	translateIdToMatchDatasetStyle
 } from "../../src/utils/DatasetUtils";
 import {InsightError} from "../../src/controller/IInsightFacade";
-import {verifyCorrectTypes} from "../../src/utils/QueryUtils";
 
 
 describe( "Dataset Util Tests", function () {
@@ -109,30 +108,4 @@ describe( "Dataset Util Tests", function () {
 			}
 		}
 	});
-});
-
-describe("Query Util Tests", function () {
-	let testWhere;
-	let testColumns;
-	let testOrder;
-
-
-	it("Test a valid where, column, and order", function () {
-		testWhere = new Object();
-
-		testColumns = new Array([
-			"courses_dept",
-			"courses_avg"
-		]);
-
-		testOrder = "courses_avg";
-
-		try {
-			verifyCorrectTypes(testWhere, testColumns, testOrder);
-		} catch (err) {
-			//
-		}
-	});
-
-
 });

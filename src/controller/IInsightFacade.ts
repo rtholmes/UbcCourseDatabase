@@ -40,49 +40,6 @@ export class ResultTooLargeError extends Error {
 	}
 }
 
-export interface LogicComparison extends Filter {
-	// AND || OR
-	logic: string;
-	filters: Filter[];
-}
-
-export interface MComparison extends Filter {
-	// GT || EQ || LT
-	comparator: string;
-	mKey: string;
-	num: number;
-}
-
-export interface SComparison extends Filter {
-	sKey: string;
-	inputString: string;
-}
-
-export interface Negation extends Filter {
-	filter: Filter
-}
-
-export interface Filter {
-	i: number;
-}
-
-export class Query {
-	public where: Filter;
-	public columns: string[]; // array of mkey and skey
-	public order: string; // mkey or skey
-
-	constructor(where: Filter, columns: string[], order: string) {
-		this.where = where;
-		this.columns = columns;
-		this.order = order;
-	}
-
-	public query() {
-		//
-	}
-
-}
-
 export interface IInsightFacade {
 	/**
 	 * Add a dataset to insightUBC.

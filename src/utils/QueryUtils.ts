@@ -194,9 +194,11 @@ function queryAllFilters(filters: Filter[], data: Array<Array<string | number>>)
 		for (let filter of filters) {
 			filter.query(data).then((returnVal) => {
 				multiArr.push(returnVal);
+				if (multiArr.length === filters.length) {
+					resolve(multiArr);
+				}
 			});
 		}
-		resolve(multiArr);
 	});
 }
 

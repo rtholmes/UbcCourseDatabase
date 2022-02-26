@@ -1,176 +1,100 @@
-import {
-	InsightError,
-	InsightResult
-} from "../controller/IInsightFacade";
-import {checkCorrectTypeOfValueForKey} from "./DatasetUtils";
-import {Filter, LogicComparison, MComparison, Negation, Query, SComparison} from "./Query";
+import {InsightError, InsightResult} from "../controller/IInsightFacade";
+import {logicComparisonConstructor} from "../Filters/LogicComparison";
+import {Filter} from "../Filters/Filter";
+import {negationConstructor} from "../Filters/Negation";
+import {sCompareConstructor} from "../Filters/SComparison";
+import {mCompareConstructor} from "../Filters/MComparison";
 
-function jsonToFilter(obj: any): Promise<Filter> {
-	let returnValue: Filter | undefined;
-	if (obj.GT !== undefined) {
-		returnValue = mCompareConstructor("GT", obj.GT);
-	} else if (obj.LT !== undefined) {
-		returnValue = mCompareConstructor("LT", obj.LT);
-	} else if (obj.EQ !== undefined) {
-		returnValue = mCompareConstructor("EQ", obj.EQ);
-	} else if (obj.AND !== undefined) {
-		returnValue = logicComparisonConstructor("AND", obj.AND);
-	} else if (obj.OR !== undefined) {
-		returnValue = logicComparisonConstructor("OR", obj.OR);
-	} else if (obj.IS !== undefined) {
-		returnValue = sCompareConstructor(obj.IS);
-	} else if (obj.NOT !== undefined) {
+/**
+ * Takes a json containing a filter and converts it to type Filter
+ * If given an invalid json returns an InsightError
+ * Recursive Filters return Promised, Logic/Not to avoid asynch issues
+ * whereas the value filters return just there new filter
+ *
+ * @param json: json value containing filter
+ *
+ * @return Promise<Filter>: The promise of the valid filter
+ */
+
+function jsonToFilter(json: any): Promise<Filter> {
+	let filter: Filter | undefined;
+	if (json.GT !== undefined) {
+		filter = mCompareConstructor("GT", json.GT);
+	} else if (json.LT !== undefined) {
+		filter = mCompareConstructor("LT", json.LT);
+	} else if (json.EQ !== undefined) {
+		filter = mCompareConstructor("EQ", json.EQ);
+	} else if (json.IS !== undefined) {
+		filter = sCompareConstructor(json.IS);
+	} else if (json.AND !== undefined) {
+		filter = logicComparisonConstructor("AND", json.AND);
+	} else if (json.OR !== undefined) {
+		filter = logicComparisonConstructor("OR", json.OR);
+	} else if (json.NOT !== undefined) {
 		return new Promise((resolve) => {
-			resolve(negationConstructor(obj.NOT));
+			resolve(negationConstructor(json.NOT));
 		});
 	} else {
-		returnValue = undefined;
+		filter = undefined;
 	}
 
 	return new Promise(function (resolve, reject) {
-		if (returnValue === undefined) {
+		if (filter === undefined) {
 			reject(new InsightError("Not a valid filter"));
 		} else {
-			resolve(returnValue);
+			resolve(filter);
 		}
 	});
 }
 
-function negationConstructor(obj: any): Promise<Negation> {
+/**
+ * Extracts the dataset id from the key
+ * throws InsightError if given invalid key
+ *
+ * @param key: query containing id
+ */
 
-	if (JSON.stringify(obj) === "{}") {
-		throw new InsightError("Given empty filter list for logic comparison");
-	}
-
-	return new Promise((resolve) => {
-		jsonToFilter(obj).then((temp) => {
-			if (temp === undefined) {
-				throw new InsightError();
-			}
-
-			resolve(new Negation(temp));
-		});
-	});
-}
-
-
-function sCompareConstructor(obj: any): SComparison {
-	let tempSKey: any;
-	let tempInputString: any;
-
-	for (const field in obj) {
-		tempSKey = field;
-		tempInputString = obj[field];
-	}
-
-	if ((typeof tempSKey) !== "string" || (typeof tempInputString) !== "string") {
-		throw new InsightError(`incorrect typing for sKey and/or input string \n
-			sKey: ${typeof tempSKey} \n
-		  	input string: ${typeof tempInputString}`);
-	}
-
-	checkCorrectTypeOfValueForKey(getKeyFromIdKey(tempSKey), tempInputString);
-	Query.isRepeatDataId(getDatasetIdFromString(tempSKey));
-
-	const asteriskRegex: RegExp = /^.*[*].*$/;
-	if (tempInputString.match(asteriskRegex)) {
-		throw new InsightError("input string contained an * inputString:" + tempInputString);
-	}
-
-	return new SComparison(tempSKey, tempInputString);
-}
-function mCompareConstructor(comp: string, obj: any): MComparison {
-	let tempMKey: any;
-	let tempNum: any;
-
-	for (const field in obj) {
-		tempMKey = field;
-		tempNum = obj[field];
-	}
-
-	if ((typeof tempMKey) !== "string" || (typeof tempNum) !== "number") {
-		throw new InsightError(`incorrect typing for mkey and/or number \n
-			mKey: ${typeof tempMKey} \n
-		  	number: ${typeof tempNum}`);
-	}
-
-	checkCorrectTypeOfValueForKey(getKeyFromIdKey(tempMKey), tempNum);
-	Query.isRepeatDataId(getDatasetIdFromString(tempMKey));
-	return new MComparison(comp, tempMKey, tempNum);
-}
-
-function logicComparisonConstructor(log: string, obj: object[]): LogicComparison {
-	let arr: Filter[] = [];
-
-	if (obj.length === 0 ) {
-		throw new InsightError("Given empty filter list for logic comparison");
-	}
-
-	for (let field of obj) {
-		jsonToFilter(field).then((temp) => {
-			arr.push(temp);
-		});
-	}
-
-	return new LogicComparison(log, arr);
-}
-
-function getPromiseOfDatasetIdFromQuery(query: Query): Promise<string> {
-	let queryKey: string = query.order;
-	let underScorePos: number =  queryKey.indexOf("_");
+function getDatasetIdFromKey(key: string): string {
+	let underScorePos: number =  key.indexOf("_");
 
 	// -1 means that the value was not found therefore it was an invalid query
 	if (underScorePos === -1) {
 		throw new InsightError("Invalid query key, \n" +
 			" expects: <dataset_id>_<dataset_key>, \n" +
-			" actual: " + queryKey);
-	}
-
-	// returns just <dataset_id>
-	return new Promise(function (resolve, reject) {
-		if (underScorePos === -1) {
-			reject(new InsightError("Invalid query key, \n" +
-				" expects: <dataset_id>_<dataset_key>, \n" +
-				" actual: " + queryKey));
-		} else {
-			resolve(queryKey.slice(0, underScorePos));
-		}
-	});
-}
-
-function getDatasetIdFromString(str: string): string {
-	let underScorePos: number =  str.indexOf("_");
-
-	// -1 means that the value was not found therefore it was an invalid query
-	if (underScorePos === -1) {
-		throw new InsightError("Invalid query key, \n" +
-			" expects: <dataset_id>_<dataset_key>, \n" +
-			" actual: " + str);
-	}
-
-	if (underScorePos === -1) {
-		throw new InsightError("Invalid query key, \n" +
-			" expects: <dataset_id>_<dataset_key>, \n" +
-			" actual: " + str);
+			" actual: " + key);
 	} else {
-		return str.slice(0, underScorePos);
+		return key.slice(0, underScorePos);
 	}
 }
 
-function getKeyFromIdKey(str: string): string {
-	let underScorePos: number =  str.indexOf("_");
+/**
+ * Extracts the field from the key
+ * throws InsightError if given invalid key
+ *
+ * @param key: query containing id
+ */
+
+function getFieldFromKey(key: string): string {
+	let underScorePos: number =  key.indexOf("_");
 
 	// -1 means that the value was not found therefore it was an invalid query
 	if (underScorePos === -1) {
 		throw new InsightError("Invalid query key, \n" +
 			" expects: <dataset_id>_<dataset_key>, \n" +
-			" actual: " + str);
+			" actual: " + key);
 	}
 
-	return str.slice(underScorePos + 1);
+	return key.slice(underScorePos + 1);
 }
 
-function getIndexOfGivenAttribute(str: string): number {
+/**
+ * Return the index in our attributes for the given field
+ * Throws InsightError if given invalid field
+ *
+ * @param field: Field
+ */
+
+function getIndexOfGivenField(field: string): number {
 	let attributes = [
 		"dept",
 		"id",
@@ -184,59 +108,89 @@ function getIndexOfGivenAttribute(str: string): number {
 		"year"
 	];
 
-	return attributes.indexOf(str);
+	let index = attributes.indexOf(field);
+
+	if (index === -1) {
+		throw new InsightError("Given invalid field " + field);
+	}
+
+	return index;
 }
+
+/**
+ * Recursively runs the query of all given Filters
+ *
+ * @param filters: Filters to query
+ * @param data: Data to filter
+ *
+ * @return Promise<Array<Array<Array<string | number>>: Promise of all the filtered data returned in an array
+ */
 
 function queryAllFilters(filters: Filter[], data: Array<Array<string | number>>):
 	Promise<Array<Array<Array<string | number>>>> {
 	return new Promise(function (resolve) {
-		let multiArr: Array<Array<Array<string | number>>> = [];
+		let filteredQueries: Array<Array<Array<string | number>>> = [];
 		for (let filter of filters) {
-			filter.query(data).then((returnVal) => {
-				multiArr.push(returnVal);
-				if (multiArr.length === filters.length) {
-					resolve(multiArr);
-				}
+			filter.query(data).then((filteredQuery) => {
+				filteredQueries.push(filteredQuery);
 			});
 		}
+		resolve(filteredQueries);
 	});
 }
 
+/**
+ * Takes the given data and turns it into an array of InsightResults
+ *
+ * @param columns: Fields that are included in the data
+ * @param data: the data to be transformed
+ *
+ * @return Promise<InsightResult[]>: returns the promise of the array of InsightResult
+ */
+
 function toInsightResult(columns: string[], data: Array<Array<string | number>>): Promise<InsightResult[]> {
 	return new Promise((resolve) => {
-		let temp: number[] = fun(columns);
+		let orderedOfExpectedFields: number[] = getOrderOfExpectedFields(columns);
 		let returnVal: InsightResult[] = [];
 		for (let entry of data) {
-			let temp12: {[key: string]: string | number} = {};
-			for (let temp4 of temp) {
-				temp12[columns[temp4]] = entry[temp4];
+			let insightResult: {[key: string]: string | number} = {};
+			for (let fieldPos of orderedOfExpectedFields) {
+				insightResult[columns[fieldPos]] = entry[fieldPos];
 			}
-			returnVal.push(temp12);
+			returnVal.push(insightResult);
 		}
 
 		resolve(returnVal);
 	});
 }
 
-function fun(columns: string[]): number[] {
+/**
+ * Gets the ordered index of expected fields
+ *
+ * If given ["courses", "id", "pass"] returns [0,2,1]
+ *
+ * @param keys
+ */
+
+function getOrderOfExpectedFields(keys: string[]): number[] {
 	let returnVal: number[] = [];
 
 	let attributes = [
 		"dept",
-		"courses",
+		"id",
 		"avg",
 		"instructor",
 		"title",
 		"pass",
 		"fail",
 		"audit",
-		"id",
+		"uuid",
 		"year"
 	];
 
-	for (let temp of columns) {
-		let temp2: string = getKeyFromIdKey(temp);
-		returnVal.push(attributes.indexOf(temp2));
+	for (let key of keys) {
+		let field: string = getFieldFromKey(key);
+		returnVal.push(attributes.indexOf(field));
 	}
 
 	returnVal = returnVal.map((value, index) => {
@@ -246,5 +200,41 @@ function fun(columns: string[]): number[] {
 	return returnVal;
 }
 
-export{getPromiseOfDatasetIdFromQuery, getKeyFromIdKey, jsonToFilter,
-	getIndexOfGivenAttribute, queryAllFilters, toInsightResult, getDatasetIdFromString};
+/**
+ * Expects query to be of 3 different types
+ * If string: return the parsed string
+ * If Array: stringify the array then return the parsed string
+ * If Object: stringify the object then return the parsed string
+ * else throw an InsightError
+ *
+ * @param query: unformatted query
+ */
+
+function toProperQueryFormat(query: any): any {
+	if (typeof query === "string") {
+		return JSON.parse(query);
+	} else if (Array.isArray(query) || typeof query === "object") {
+		let jsonStr: string = JSON.stringify(query);
+		return JSON.parse(jsonStr);
+	} else {
+		throw new InsightError("Given invalid query format");
+	}
+}
+
+/**
+ * Throws Insight Error if given invalid parameter
+ */
+
+function checkValidQueryParameters(where: Filter, columns: string[], order: string) {
+	if (where === undefined ||
+		columns === undefined ||
+		columns.length === 0 ||
+		order === undefined ||
+		order.length === 0) {
+		throw new InsightError("Invalid query");
+	}
+}
+
+export{getFieldFromKey, jsonToFilter,
+	getIndexOfGivenField, queryAllFilters, toInsightResult, getDatasetIdFromKey, toProperQueryFormat,
+	checkValidQueryParameters};

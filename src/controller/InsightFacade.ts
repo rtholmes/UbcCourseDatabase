@@ -8,13 +8,14 @@ import {
 } from "./IInsightFacade";
 
 import {
-	getPromiseOfDatasetIdFromQuery,
-	jsonToFilter, toInsightResult
+	toProperQueryFormat,
+	jsonToFilter, toInsightResult, checkValidQueryParameters, getDatasetIdFromKey
 } from "../utils/QueryUtils";
 
 import {isValidDatasetIdName} from "../utils/DatasetUtils";
 import CourseHandler from "../utils/CourseHandler";
-import {Filter, Query} from "../utils/Query";
+import {Query} from "../utils/Query";
+import {Filter} from "../Filters/Filter";
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
@@ -69,51 +70,35 @@ export default class InsightFacade implements IInsightFacade {
 		});
 	}
 
-	public performQuery(query: unknown): Promise<InsightResult[]> {
-		let obj: any;
-
-		if (typeof query === "string") {
-			obj = JSON.parse(query);
-		} else if (Array.isArray(query) || typeof query === "object") {
-			let jsonStr: string = JSON.stringify(query);
-			obj = JSON.parse(jsonStr);
-		} else {
-			return Promise.reject(new InsightError("Given invalid query format"));
-		}
+	public performQuery(queryInput: unknown): Promise<InsightResult[]> {
+		let formattedQuery: any = toProperQueryFormat(queryInput);
 
 		return new Promise((resolve, reject) => {
-			if (obj.OPTIONS === undefined) {
+			if (formattedQuery.OPTIONS === undefined) {
 				reject(new InsightError("OPTIONS undefined"));
 			}
 
-			let where: Filter = obj.WHERE;
-			let columns: string[] = obj.OPTIONS.COLUMNS;
-			let order: string = obj.OPTIONS.ORDER;
-			if (where === undefined ||
-				columns === undefined ||
-				columns.length === 0 ||
-				order === undefined ||
-				order.length === 0) {
-				reject(new InsightError("Invalid query"));
-			}
+			let where: Filter = formattedQuery.WHERE;
+			let columns: string[] = formattedQuery.OPTIONS.COLUMNS;
+			let order: string = formattedQuery.OPTIONS.ORDER;
+			checkValidQueryParameters(where, columns, order);
 
-			let queer: Query;
+			let query: Query;
 			jsonToFilter(where).then((filter) => {
-				queer = new Query(filter, columns, order);
-				return getPromiseOfDatasetIdFromQuery(queer);
-			}).then((id) => {
+				query = new Query(filter, columns, order);
+				let id = getDatasetIdFromKey(order);
 				return this.DatasetHandler.getDataFromDiskGivenId(id);
 			}).then((data) => {
-				return queer.query(data);
+				return query.query(data);
 			}).then((queriedData) => {
 				if (queriedData.length > 5000) {
 					reject(new ResultTooLargeError());
 				}
-				return queer.organizeSections(queriedData);
+				return query.organizeSections(queriedData);
 			}).then((organizedData) => {
-				return queer.truncateSections(organizedData);
+				return query.truncateSections(organizedData);
 			}).then((truncatedData) => {
-				resolve(toInsightResult(queer.columns, truncatedData));
+				resolve(toInsightResult(query.columns, truncatedData));
 			}).catch(() => {
 				reject(new InsightError());
 			});

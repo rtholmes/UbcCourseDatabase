@@ -21,7 +21,7 @@ export class LogicComparison implements Filter {
 					// filter out repeat elements
 					filteredDataArray[0] = filteredDataArray[0].filter((element) => {
 						let bool = true;
-						for (const filterData of filteredDataArray) {
+						for (let filterData of filteredDataArray) {
 							if (!filterData.includes(element)) {
 								bool = false;
 							}
@@ -34,7 +34,7 @@ export class LogicComparison implements Filter {
 				} else {
 
 					let combinedData: Array<Array<string | number>> = [];
-					for (const filteredData of filteredDataArray) {
+					for (let filteredData of filteredDataArray) {
 						// combines the combinedData with the filteredData then filters out duplicates
 						combinedData = combinedData.concat(filteredData).filter(
 							function (dataPoint, index, self) {

@@ -20,23 +20,20 @@ export default class CourseHandler {
 	 */
 	public processData(content: string, id: string): Promise<string[]> {
 		return new Promise((resolve, reject) => {
-			this.unzipData(content)                                             // 1. Unzip Data, check if non zip
+			this.checkExistingIdName(id);                                       // 0.5) Check for existing id name
+			this.unzipData(content)                                             // 1) Unzip Data, check if non zip
 				.then((unZippedContent) => {
-					return Promise.all(this.parseData(unZippedContent));        // 2. Grab all ./courses/ files
+					return Promise.all(this.parseData(unZippedContent));        // 2) Grab all ./courses/ files
 				})
 				.then((JSONs) => {
-					if (JSONs.length === 0) {							        // 3. Check if no ./courses/ files
-						reject(new InsightError("No course folder contents exist"));
-					}
-					let validSectionsAdded = this.grabData(JSONs);              // 4. Store valid sections to array
-					if (validSectionsAdded === 0) {				                // 5. Check if no valid sections exist
-						reject(new InsightError("No valid sections exist"));
-					}
-					return this.saveToDisk(id);                                 // 6. Save valid sections to disk
+					this.checkFileLength(JSONs);                                // 3) Check if no ./courses/ files
+					this.grabData(JSONs);										// 4) Store valid sections to array
+					this.checkDatasetLength();									// 5) Check if any valid sections exist
+					return this.saveToDisk(id);                                 // 6) Save valid sections to disk
 				}).then(() => {
-					return this.grabDatasetIds(); 							    // 7. Grab all added ids from disk
+					return this.grabDatasetIds(); 							    // 7) Grab all added ids from disk
 				}).then(function (addedIds) {
-					resolve(addedIds);											// 8. Return ids
+					resolve(addedIds);											// 8) Return ids
 				})
 				.catch(function (err) {
 					reject(err);
@@ -108,10 +105,7 @@ export default class CourseHandler {
 						String(field.id),
 						Number(field.Year)
 					];
-					if (this.isValidSection(attributes)) {
-						this.coursesDataset.push(attributes);
-						validSectionsAdded++;
-					}
+					this.checkValidSection(attributes);
 				}
 			} catch { // invalid JSON, skip over
 			}
@@ -122,18 +116,18 @@ export default class CourseHandler {
 	/**
 	 * Checks if any fields in course section are undefined
 	 *
-	 * Will return false if any field is undefined,
-	 * true otherwise
+	 * Will do nothing if any field is undefined,
+	 * push fields to course dataset otherwise
 	 *
 	 * @param attributes: The array of fields grabbed from JSONs
 	 */
-	private isValidSection(attributes: any[]): boolean {
+	private checkValidSection(attributes: any[]): void {
 		for (const val of attributes) {
 			if (val === undefined) {
-				return false;
+				return;
 			}
 		}
-		return true;
+		this.coursesDataset.push(attributes);
 	}
 
 	/**
@@ -174,17 +168,16 @@ export default class CourseHandler {
 	 *
 	 * @param id: The id of a database
 	 */
-	public isExistingDatasetIdName(id: string): boolean {
-		let idExists = false;
+	public checkExistingIdName(id: string): void {
 		if (fs.existsSync("./data/")) {
 			fs.readdirSync("./data/").forEach((file) => {
 				let datasetIdName = file.substring(0, file.length - 4);
 				if (id === datasetIdName) {
-					idExists = true;
+					throw new InsightError("Given an already existing id " + id);
 				}
 			});
 		}
-		return idExists;
+		return;
 	}
 
 	/**
@@ -213,8 +206,7 @@ export default class CourseHandler {
 	 * including their id, type, and number of rows/valid sections
 	 *
 	 * Promise should fulfill with an array of currently added InsightDatasets,
-	 * and will only fulfill.
-	 *
+	 * and will only fulfill
 	 */
 	public listFromDisk(): Promise<InsightDataset[]> {
 		let addedInsightDatasets: InsightDataset[] = [];
@@ -236,6 +228,12 @@ export default class CourseHandler {
 		});
 	}
 
+	/**
+	 * Grabs database from disk given id
+	 *
+	 * Will return with the requested course database as a 2D array,
+	 * Will throw InsightError if database with given id does not exist
+	 */
 	public getDataFromDiskGivenId(id: string): Promise<Array<Array<string | number>>> {
 		return new Promise(function (resolve, reject) {
 			if (fs.existsSync("./data/")) {
@@ -245,5 +243,33 @@ export default class CourseHandler {
 				reject(new InsightError(`Could not find data in folder with id: ${id}`));
 			}
 		});
+	}
+
+	/**
+	 * Handles no valid section error for processData
+	 *
+	 * Will throw InsightError if no valid sections were extracted,
+	 * does nothing otherwise
+	 */
+	private checkDatasetLength(): void {
+		if (this.coursesDataset.length === 0) {
+			throw new InsightError("No valid sections exist");
+		}
+		return;
+	}
+
+	/**
+	 * Handles no course folder contents error for processData
+	 *
+	 * Will throw InsightError if no course folder contents were extracted,
+	 * does nothing otherwise
+	 *
+	 * @param JSONs: The readable JSON content from /courses directory
+	 */
+	protected checkFileLength(JSONs: string[]): void {
+		if (JSONs.length === 0) {
+			throw new InsightError("No course folder contents exist");
+		}
+		return;
 	}
 }

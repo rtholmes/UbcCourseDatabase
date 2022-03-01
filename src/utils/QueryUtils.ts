@@ -133,9 +133,12 @@ function queryAllFilters(filters: Filter[], data: Array<Array<string | number>>)
 		for (let filter of filters) {
 			filter.query(data).then((filteredQuery) => {
 				filteredQueries.push(filteredQuery);
+
+				if (filteredQueries.length === filters.length) {
+					resolve(filteredQueries);
+				}
 			});
 		}
-		resolve(filteredQueries);
 	});
 }
 

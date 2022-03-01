@@ -30,36 +30,36 @@ export class Query {
 	}
 
 	public truncateSections(data: Array<Array<string | number>>): Promise<Array<Array<string | number>>> {
-		let arr: Array<Array<string | number>> = [];
-		let arr2: number[] = [];
-		for (let temp of this.columns) {
-			arr2.push(getIndexOfGivenField(getFieldFromKey(temp)));
+		let returnVal: Array<Array<string | number>> = [];
+		let orderOfFields: number[] = [];
+		for (let column of this.columns) {
+			orderOfFields.push(getIndexOfGivenField(getFieldFromKey(column)));
 		}
-		for (let varTemp of data) {
-			let arr3: Array<string | number> = [];
-			for (let i of arr2) {
-				arr3.push(varTemp[i]);
+		for (let dataPoint of data) {
+			let orderedDataPoint: Array<string | number> = [];
+			for (let field of orderOfFields) {
+				orderedDataPoint.push(dataPoint[field]);
 			}
-			arr.push(arr3);
+			returnVal.push(orderedDataPoint);
 		}
 
 		return new Promise(function (resolve) {
-			resolve(arr);
+			resolve(returnVal);
 		});
 	}
 
 	public organizeSections(data: Array<Array<string | number>>): Promise<Array<Array<string | number>>> {
 		let map: Map<string | number, Array<Array<number | string>>> = new Map();
 
-		let temp: number = getIndexOfGivenField(getFieldFromKey(this.order));
+		let orderIndex: number = getIndexOfGivenField(getFieldFromKey(this.order));
 
-		for (const varTemp of data) {
-			let temp2: Array<Array<string | number>> | undefined = map.get(varTemp[temp]);
-			if (temp2 === undefined) {
-				temp2 = [];
+		for (const dataPoint of data) {
+			let valOfMapAtDataPoint: Array<Array<string | number>> | undefined = map.get(dataPoint[orderIndex]);
+			if (valOfMapAtDataPoint === undefined) {
+				valOfMapAtDataPoint = [];
 			}
-			temp2.push(varTemp);
-			map.set(varTemp[temp], temp2);
+			valOfMapAtDataPoint.push(dataPoint);
+			map.set(dataPoint[orderIndex], valOfMapAtDataPoint);
 		}
 
 		const sortedMap = new Map([...map.entries()].sort());
@@ -67,8 +67,8 @@ export class Query {
 		let returnVal: Array<Array<string | number>> = [];
 
 		for (let val of sortedMap.values()) {
-			for (let temp3 of val) {
-				returnVal.push(temp3);
+			for (let valElement of val.reverse()) {
+				returnVal.push(valElement);
 			}
 		}
 

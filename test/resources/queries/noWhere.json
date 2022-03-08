@@ -1,5 +1,5 @@
 {
-	"title": "should reject queries missing WHERE",
+	"title": "having a missing WHERE passes on data as is without filtering",
 	"input": {
 		"WHY": {
 			"GT": {

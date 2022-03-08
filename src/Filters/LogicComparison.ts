@@ -13,7 +13,7 @@ export class LogicComparison implements Filter {
 	}
 
 	public query(data: Array<Array<string | number>>): Promise<Array<Array<string | number>>> {
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
 			queryAllFilters(this.filters, data).then((filteredDataArray) => {
 
 				if (this.logic === "AND") {
@@ -31,7 +31,7 @@ export class LogicComparison implements Filter {
 
 					resolve(filteredDataArray[0]);
 
-				} else {
+				} else if (this.logic === "OR") {
 
 					let combinedData: Array<Array<string | number>> = [];
 					for (let filteredData of filteredDataArray) {
@@ -44,6 +44,8 @@ export class LogicComparison implements Filter {
 
 					resolve(combinedData);
 
+				} else {
+					reject(new InsightError("Invalid logic " + this.logic));
 				}
 			});
 		});

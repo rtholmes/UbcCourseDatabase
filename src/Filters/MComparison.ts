@@ -30,10 +30,12 @@ export class MComparison implements Filter {
 				if (dataPoint[pos] > this.num) {
 					filteredData.push(dataPoint);
 				}
-			} else {
+			} else if (this.comparator === "LT") {
 				if (dataPoint[pos] < this.num) {
 					filteredData.push(dataPoint);
 				}
+			} else {
+				return Promise.reject(new InsightError("Invalid comparator " + this.comparator));
 			}
 		}
 

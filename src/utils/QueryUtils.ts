@@ -4,6 +4,7 @@ import {Filter} from "../Filters/Filter";
 import {negationConstructor} from "../Filters/Negation";
 import {sCompareConstructor} from "../Filters/SComparison";
 import {mCompareConstructor} from "../Filters/MComparison";
+import {EmptyFilter} from "../Filters/EmptyFilter";
 
 /**
  * Takes a json containing a filter and converts it to type Filter
@@ -18,7 +19,9 @@ import {mCompareConstructor} from "../Filters/MComparison";
 
 function jsonToFilter(json: any): Promise<Filter> {
 	let filter: Filter | undefined;
-	if (json.GT !== undefined) {
+	if (json === undefined) {
+		filter = new EmptyFilter();
+	} else if (json.GT !== undefined) {
 		filter = mCompareConstructor("GT", json.GT);
 	} else if (json.LT !== undefined) {
 		filter = mCompareConstructor("LT", json.LT);
@@ -229,8 +232,7 @@ function toProperQueryFormat(query: any): any {
  */
 
 function checkValidQueryParameters(where: Filter, columns: string[], order: string) {
-	if (where === undefined ||
-		columns === undefined ||
+	if (columns === undefined ||
 		columns.length === 0 ||
 		order === undefined ||
 		order.length === 0) {

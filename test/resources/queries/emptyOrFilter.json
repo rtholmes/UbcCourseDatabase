@@ -1,8 +1,8 @@
 {
-	"title": "should reject LOGICCOMPARISON queries with empty filter array",
+	"title": "should reject OR LOGICCOMPARISON queries with empty filter array",
 	"input": {
 		"WHERE": {
-			"AND": []
+			"OR": []
 		},
 		"OPTIONS": {
 			"COLUMNS": [

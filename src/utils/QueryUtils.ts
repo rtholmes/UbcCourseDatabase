@@ -228,15 +228,19 @@ function toProperQueryFormat(query: any): any {
 }
 
 /**
- * Throws Insight Error if given invalid parameter
+ * Throws InsightError if given invalid parameter
+ * Throws InsightError if order is not in columns
  */
 
-function checkValidQueryParameters(where: Filter, columns: string[], order: string) {
+function checkValidQueryParameters(columns: string[], order: string) {
 	if (columns === undefined ||
 		columns.length === 0 ||
 		order === undefined ||
 		order.length === 0) {
 		throw new InsightError("Invalid query");
+	}
+	if (!columns.includes(order)) {
+		throw new InsightError("Order is not contained in Columns");
 	}
 }
 

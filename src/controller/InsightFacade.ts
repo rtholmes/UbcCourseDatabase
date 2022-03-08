@@ -81,7 +81,7 @@ export default class InsightFacade implements IInsightFacade {
 			let where: Filter = formattedQuery.WHERE;
 			let columns: string[] = formattedQuery.OPTIONS.COLUMNS;
 			let order: string = formattedQuery.OPTIONS.ORDER;
-			checkValidQueryParameters(where, columns, order);
+			checkValidQueryParameters(columns, order);
 
 			let query: Query;
 			jsonToFilter(where).then((filter) => {

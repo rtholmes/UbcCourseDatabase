@@ -5,6 +5,7 @@ import {negationConstructor} from "../Filters/Negation";
 import {sCompareConstructor} from "../Filters/SComparison";
 import {mCompareConstructor} from "../Filters/MComparison";
 import {EmptyFilter} from "../Filters/EmptyFilter";
+import {stringify} from "querystring";
 
 /**
  * Takes a json containing a filter and converts it to type Filter
@@ -19,8 +20,9 @@ import {EmptyFilter} from "../Filters/EmptyFilter";
 
 function jsonToFilter(json: any): Promise<Filter> {
 	let filter: Filter | undefined;
+
 	if (json === undefined) {
-		filter = new EmptyFilter();
+		filter = undefined;
 	} else if (json.GT !== undefined) {
 		filter = mCompareConstructor("GT", json.GT);
 	} else if (json.LT !== undefined) {
@@ -37,6 +39,8 @@ function jsonToFilter(json: any): Promise<Filter> {
 		return new Promise((resolve) => {
 			resolve(negationConstructor(json.NOT));
 		});
+	} else if (stringify(json) === "") {
+		filter = new EmptyFilter();
 	} else {
 		filter = undefined;
 	}

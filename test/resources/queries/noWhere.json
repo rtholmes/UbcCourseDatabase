@@ -1,10 +1,8 @@
 {
 	"title": "having a missing WHERE passes on data as is without filtering",
 	"input": {
-		"WHY": {
-			"GT": {
-				"courses_avg": 98.75
-			}
+		"WHERE": {
+
 		},
 		"OPTIONS": {
 			"COLUMNS": [

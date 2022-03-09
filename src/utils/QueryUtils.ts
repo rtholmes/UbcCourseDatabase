@@ -94,36 +94,6 @@ function getFieldFromKey(key: string): string {
 }
 
 /**
- * Return the index in our attributes for the given field
- * Throws InsightError if given invalid field
- *
- * @param field: Field
- */
-
-function getIndexOfGivenField(field: string): number {
-	let attributes = [
-		"dept",
-		"id",
-		"avg",
-		"instructor",
-		"title",
-		"pass",
-		"fail",
-		"audit",
-		"uuid",
-		"year"
-	];
-
-	let index = attributes.indexOf(field);
-
-	if (index === -1) {
-		throw new InsightError("Given invalid field " + field);
-	}
-
-	return index;
-}
-
-/**
  * Recursively runs the query of all given Filters
  *
  * @param filters: Filters to query
@@ -224,6 +194,5 @@ function checkValidQueryParameters(where: Filter, columns: string[], order: stri
 	}
 }
 
-export{getFieldFromKey, jsonToFilter,
-	getIndexOfGivenField, queryAllFilters, toInsightResult, getDatasetIdFromKey, toProperQueryFormat,
+export{getFieldFromKey, jsonToFilter, queryAllFilters, toInsightResult, getDatasetIdFromKey, toProperQueryFormat,
 	checkValidQueryParameters};

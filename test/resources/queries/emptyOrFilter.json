@@ -1,10 +1,8 @@
 {
-	"title": "should reject queries when ORDER key is not in COLUMNS",
+	"title": "should reject OR LOGICCOMPARISON queries with empty filter array",
 	"input": {
 		"WHERE": {
-			"GT": {
-				"courses_avg": 98.75
-			}
+			"OR": []
 		},
 		"OPTIONS": {
 			"COLUMNS": [
@@ -12,7 +10,7 @@
 				"courses_id",
 				"courses_avg"
 			],
-			"ORDER": "foo"
+			"ORDER": "courses_avg"
 		}
 	},
 	"errorExpected": true,

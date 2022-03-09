@@ -1,4 +1,4 @@
-import {getFieldFromKey, getIndexOfGivenField} from "./QueryUtils";
+import {getDatasetIdFromKey, getFieldFromKey, getIndexOfGivenField} from "./QueryUtils";
 import {InsightError} from "../controller/IInsightFacade";
 import {Filter} from "../Filters/Filter";
 
@@ -12,6 +12,11 @@ export class Query {
 		this.where = where;
 		this.columns = columns;
 		this.order = order;
+
+		for (let column of this.columns) {
+			Query.isRepeatDataId(getDatasetIdFromKey(column));
+		}
+		Query.isRepeatDataId(getDatasetIdFromKey(order));
 	}
 
 	public static isRepeatDataId(str: string) {

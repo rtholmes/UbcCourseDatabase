@@ -4,6 +4,8 @@ import {Filter} from "../Filters/Filter";
 import {negationConstructor} from "../Filters/Negation";
 import {sCompareConstructor} from "../Filters/SComparison";
 import {mCompareConstructor} from "../Filters/MComparison";
+import {EmptyFilter} from "../Filters/EmptyFilter";
+import {stringify} from "querystring";
 
 /**
  * Takes a json containing a filter and converts it to type Filter
@@ -18,6 +20,7 @@ import {mCompareConstructor} from "../Filters/MComparison";
 
 function jsonToFilter(json: any): Promise<Filter> {
 	let filter: Filter | undefined;
+
 	if (json.GT !== undefined) {
 		filter = mCompareConstructor("GT", json.GT);
 	} else if (json.LT !== undefined) {
@@ -34,6 +37,8 @@ function jsonToFilter(json: any): Promise<Filter> {
 		return new Promise((resolve) => {
 			resolve(negationConstructor(json.NOT));
 		});
+	} else if (stringify(json) === "") {
+		filter = new EmptyFilter();
 	} else {
 		filter = undefined;
 	}
@@ -225,7 +230,8 @@ function toProperQueryFormat(query: any): any {
 }
 
 /**
- * Throws Insight Error if given invalid parameter
+ * Throws InsightError if given invalid parameter
+ * Throws InsightError if order is not in columns
  */
 
 function checkValidQueryParameters(where: Filter, columns: string[], order: string) {
@@ -235,6 +241,9 @@ function checkValidQueryParameters(where: Filter, columns: string[], order: stri
 		order === undefined ||
 		order.length === 0) {
 		throw new InsightError("Invalid query");
+	}
+	if (!columns.includes(order)) {
+		throw new InsightError("Order is not contained in Columns");
 	}
 }
 

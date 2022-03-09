@@ -349,7 +349,8 @@ describe("InsightFacade", function () {
 						}]);
 					});
 				})
-				.catch(() => {
+				.catch((err) => {
+					console.log(err);
 					expect.fail("Should not execute");
 				});
 		});
@@ -406,7 +407,8 @@ describe("InsightFacade", function () {
 						}]);
 					});
 				})
-				.catch(() => {
+				.catch((err) => {
+					console.log(err);
 					expect.fail("Should not execute");
 				});
 		});

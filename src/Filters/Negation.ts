@@ -1,6 +1,7 @@
 import {Filter} from "./Filter";
 import {InsightError} from "../controller/IInsightFacade";
 import {jsonToFilter} from "../utils/QueryUtils";
+import {CourseData} from "../utils/CourseData";
 
 export class Negation implements Filter {
 	private filter: Filter;
@@ -9,12 +10,12 @@ export class Negation implements Filter {
 		this.filter = filter;
 	}
 
-	public query(data: Array<Array<string | number>>): Promise<Array<Array<string | number>>> {
+	public query(data: CourseData[]): Promise<CourseData[]>  {
 		return new Promise((resolve) => {
-			this.filter.query(data).then((queriedData: Array<Array<string | number>>) => {
-				let negatedData: Array<Array<string | number>>;
+			this.filter.query(data).then((queriedData: CourseData[]) => {
+				let negatedData: CourseData[];
 				// filters out data to remove all elements in queriedData
-				negatedData = data.filter((element: Array<string | number>) => {
+				negatedData = data.filter((element) => {
 					return !queriedData.includes(element);
 				});
 				resolve(negatedData);

@@ -6,6 +6,7 @@ import {sCompareConstructor} from "../Filters/SComparison";
 import {mCompareConstructor} from "../Filters/MComparison";
 import {EmptyFilter} from "../Filters/EmptyFilter";
 import {stringify} from "querystring";
+import {CourseData} from "./CourseData";
 
 /**
  * Takes a json containing a filter and converts it to type Filter
@@ -93,36 +94,6 @@ function getFieldFromKey(key: string): string {
 }
 
 /**
- * Return the index in our attributes for the given field
- * Throws InsightError if given invalid field
- *
- * @param field: Field
- */
-
-function getIndexOfGivenField(field: string): number {
-	let attributes = [
-		"dept",
-		"id",
-		"avg",
-		"instructor",
-		"title",
-		"pass",
-		"fail",
-		"audit",
-		"uuid",
-		"year"
-	];
-
-	let index = attributes.indexOf(field);
-
-	if (index === -1) {
-		throw new InsightError("Given invalid field " + field);
-	}
-
-	return index;
-}
-
-/**
  * Recursively runs the query of all given Filters
  *
  * @param filters: Filters to query
@@ -131,10 +102,10 @@ function getIndexOfGivenField(field: string): number {
  * @return Promise<Array<Array<Array<string | number>>: Promise of all the filtered data returned in an array
  */
 
-function queryAllFilters(filters: Filter[], data: Array<Array<string | number>>):
-	Promise<Array<Array<Array<string | number>>>> {
+function queryAllFilters(filters: Filter[], data: CourseData[]):
+	Promise<CourseData[][]> {
 	return new Promise(function (resolve) {
-		let filteredQueries: Array<Array<Array<string | number>>> = [];
+		let filteredQueries: CourseData[][] = [];
 		for (let filter of filters) {
 			filter.query(data).then((filteredQuery) => {
 				filteredQueries.push(filteredQuery);
@@ -156,14 +127,18 @@ function queryAllFilters(filters: Filter[], data: Array<Array<string | number>>)
  * @return Promise<InsightResult[]>: returns the promise of the array of InsightResult
  */
 
-function toInsightResult(columns: string[], data: Array<Array<string | number>>): Promise<InsightResult[]> {
+function toInsightResult(columns: string[], data: CourseData[]): Promise<InsightResult[]> {
 	return new Promise((resolve) => {
-		let orderedOfExpectedFields: number[] = getOrderOfExpectedFields(columns);
 		let returnVal: InsightResult[] = [];
+		let value: string | number | undefined;
 		for (let entry of data) {
 			let insightResult: {[key: string]: string | number} = {};
-			for (let fieldPos of orderedOfExpectedFields) {
-				insightResult[columns[fieldPos]] = entry[fieldPos];
+			for (let column of columns) {
+				value = entry.get(column);
+				if (value === undefined) {
+					throw new InsightError("Invalid key");
+				}
+				insightResult[column] = value;
 			}
 			returnVal.push(insightResult);
 		}
@@ -179,34 +154,6 @@ function toInsightResult(columns: string[], data: Array<Array<string | number>>)
  *
  * @param keys
  */
-
-function getOrderOfExpectedFields(keys: string[]): number[] {
-	let returnVal: number[] = [];
-
-	let attributes = [
-		"dept",
-		"id",
-		"avg",
-		"instructor",
-		"title",
-		"pass",
-		"fail",
-		"audit",
-		"uuid",
-		"year"
-	];
-
-	for (let key of keys) {
-		let field: string = getFieldFromKey(key);
-		returnVal.push(attributes.indexOf(field));
-	}
-
-	returnVal = returnVal.map((value, index) => {
-		return index;
-	});
-
-	return returnVal;
-}
 
 /**
  * Expects query to be of 3 different types
@@ -247,6 +194,5 @@ function checkValidQueryParameters(where: Filter, columns: string[], order: stri
 	}
 }
 
-export{getFieldFromKey, jsonToFilter,
-	getIndexOfGivenField, queryAllFilters, toInsightResult, getDatasetIdFromKey, toProperQueryFormat,
+export{getFieldFromKey, jsonToFilter, queryAllFilters, toInsightResult, getDatasetIdFromKey, toProperQueryFormat,
 	checkValidQueryParameters};

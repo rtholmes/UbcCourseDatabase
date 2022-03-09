@@ -2,8 +2,7 @@ import {assert, expect} from "chai";
 import {InsightError} from "../../src/controller/IInsightFacade";
 import {
 	checkCorrectTypeOfValueForKey,
-	isValidDatasetIdName,
-	translateIdToMatchDatasetStyle
+	isValidDatasetIdName
 } from "../../src/utils/DatasetUtils";
 
 // tests for utils
@@ -43,25 +42,6 @@ describe( "Dataset Util Tests", function () {
 
 	});
 
-	it("Test that courses_key properly converts to key format", function () {
-		let map = new Map<string, string>([
-			["courses_dept", "dept"],
-			["courses_id", "id"],
-			["courses_avg", "avg"],
-			["courses_instructor", "instructor"],
-			["courses_title", "title"],
-			["courses_pass", "pass"],
-			["courses_fail", "fail"],
-			["courses_audit", "audit"],
-			["courses_uuid", "uuid"],
-			["courses_year", "year"]
-		]);
-
-		for (let [oldKey, newKey] of map) {
-			expect(translateIdToMatchDatasetStyle(oldKey)).to.be.deep.equal(newKey);
-		}
-	});
-
 	it("Test that a key is passing with its expected datatype", function () {
 		let map = new Map<string, number | string>([
 			["dept", "CPSC"],
@@ -73,7 +53,18 @@ describe( "Dataset Util Tests", function () {
 			["fail", 1],
 			["audit", 600],
 			["uuid", "1234567"],
-			["year", 2000]
+			["year", 2000],
+			["lat", 12.3456],
+			["lon", 78.9012],
+			["seats", 100],
+			["fullname", "Hugh Dempster Pavilion"],
+			["shortname", "DMP"],
+			["number", "101"],
+			["name", "DMP_101"],
+			["address", "6245 Agronomy Road V6T 1Z4"],
+			["type", "Small Group"],
+			["furniture", "Classroom-Movable Tables & Chairs"],
+			["href", "url"]
 		]);
 
 		for (let [key, value] of map) {
@@ -96,7 +87,18 @@ describe( "Dataset Util Tests", function () {
 			["fail", "1"],
 			["audit", "1"],
 			["uuid", 1],
-			["year", "2000"]
+			["year", "2000"],
+			["lat", "12.3456"],
+			["lon", "78.9012"],
+			["seats", "100"],
+			["fullname", 1],
+			["shortname", 1],
+			["number", 1],
+			["name", 1],
+			["address", 1],
+			["type", 1],
+			["furniture", 1],
+			["href", 1]
 		]);
 
 		for (let [key, value] of map) {

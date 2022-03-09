@@ -1,6 +1,7 @@
 import {InsightDataset, InsightDatasetKind, InsightError, NotFoundError} from "../controller/IInsightFacade";
 import JSZip from "jszip";
 import * as fs from "fs-extra";
+import {CourseData} from "./CourseData";
 
 export default class CourseHandler {
 	private coursesDataset: any[];
@@ -234,11 +235,28 @@ export default class CourseHandler {
 	 * Will return with the requested course database as a 2D array,
 	 * Will throw InsightError if database with given id does not exist
 	 */
-	public getDataFromDiskGivenId(id: string): Promise<Array<Array<string | number>>> {
+	public getDataFromDiskGivenId(id: string): Promise<CourseData[]> {
 		return new Promise(function (resolve, reject) {
 			if (fs.existsSync("./data/")) {
 				let path: string = "./data/" + id + ".txt";
-				resolve(JSON.parse(fs.readFileSync(path,"utf8")));
+				let jsons = JSON.parse(fs.readFileSync(path,"utf8"));
+				let returnVal: CourseData[] = [];
+				for (let json of jsons) {
+					let attributes = new Map([
+						["dept", json[0]],
+						["id", json[1]],
+						["avg", json[2]],
+						["instructor", json[3]],
+						["title", json[4]],
+						["pass", json[5]],
+						["fail", json[6]],
+						["audit", json[7]],
+						["uuid", json[8]],
+						["year", json[9]]
+					]);
+					returnVal.push(new CourseData(attributes));
+				}
+				resolve(returnVal);
 			} else {
 				reject(new InsightError(`Could not find data in folder with id: ${id}`));
 			}

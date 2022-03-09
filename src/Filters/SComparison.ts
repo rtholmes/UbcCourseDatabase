@@ -1,8 +1,9 @@
 import {InsightError} from "../controller/IInsightFacade";
 import {checkCorrectTypeOfValueForKey} from "../utils/DatasetUtils";
-import {getDatasetIdFromKey, getFieldFromKey, getIndexOfGivenField} from "../utils/QueryUtils";
+import {getDatasetIdFromKey, getFieldFromKey} from "../utils/QueryUtils";
 import {Filter} from "./Filter";
 import {Query} from "../utils/Query";
+import {CourseData} from "../utils/CourseData";
 
 export class SComparison implements Filter {
 	private sKey: string;
@@ -13,13 +14,12 @@ export class SComparison implements Filter {
 		this.inputString = inputString;
 	}
 
-	public query(data: Array<Array<string | number>>): Promise<Array<Array<string | number>>> {
-		let filteredData: Array<Array<string | number>> = [];
+	public  query(data: CourseData[]): Promise<CourseData[]> {
+		let filteredData: CourseData[] = [];
 		let key = getFieldFromKey(this.sKey);
-		let pos = getIndexOfGivenField(key);
 
 		for (const dataPoint of data) {
-			if (dataPoint[pos] === this.inputString) {
+			if (dataPoint.get(key) === this.inputString) {
 				filteredData.push(dataPoint);
 			}
 		}

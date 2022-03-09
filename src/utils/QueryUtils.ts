@@ -21,9 +21,7 @@ import {stringify} from "querystring";
 function jsonToFilter(json: any): Promise<Filter> {
 	let filter: Filter | undefined;
 
-	if (json === undefined) {
-		filter = undefined;
-	} else if (json.GT !== undefined) {
+	if (json.GT !== undefined) {
 		filter = mCompareConstructor("GT", json.GT);
 	} else if (json.LT !== undefined) {
 		filter = mCompareConstructor("LT", json.LT);
@@ -236,8 +234,9 @@ function toProperQueryFormat(query: any): any {
  * Throws InsightError if order is not in columns
  */
 
-function checkValidQueryParameters(columns: string[], order: string) {
-	if (columns === undefined ||
+function checkValidQueryParameters(where: Filter, columns: string[], order: string) {
+	if (where === undefined ||
+		columns === undefined ||
 		columns.length === 0 ||
 		order === undefined ||
 		order.length === 0) {

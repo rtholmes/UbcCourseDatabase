@@ -34,7 +34,6 @@ export default class RoomHandler {
 					try {
 						return unZippedContent.file("rooms/index.htm").async("string").then((data: any) => {
 							const document = parse5.parse(data);
-							// eslint-disable-next-line max-nested-callbacks
 							this.doSomeDFS(document, unZippedContent);
 							console.log(this.roomsDataset);
 							console.log(this.roomAttributes);
@@ -141,24 +140,5 @@ export default class RoomHandler {
 			return;
 		}
 		return;
-	}
-
-	private requestGeolocation(attributes: Array<string | number>): Promise<any> {
-		return new Promise((resolve, reject) => {
-			let URLAddress = encodeURI(attributes[4] as string);
-			let url = "http://cs310.students.cs.ubc.ca:11316/api/v1/project_team678/" + URLAddress;
-			http.get(url, function (res: any) {
-				let data = "";
-				res.on("data", function (segment: any) {
-					data += segment.toString();
-				});
-				res.on("end", function () {
-					resolve(JSON.parse(data));
-				});
-			}).on("error", function (err: any) {
-				console.log(err);
-				reject(err);
-			});
-		});
 	}
 }

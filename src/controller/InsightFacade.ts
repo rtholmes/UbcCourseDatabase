@@ -22,52 +22,36 @@ import {Filter} from "../Filters/Filter";
  *
  */
 export default class InsightFacade implements IInsightFacade {
-	private DatasetHandler: CourseHandler;
+	private CourseHandler: CourseHandler;
 	constructor() {
 		console.log("InsightFacadeImpl::init()");
-		this.DatasetHandler = new CourseHandler();
+		this.CourseHandler = new CourseHandler();
 	}
 
 	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		// Check for valid id
-		if (!isValidDatasetIdName(id)) {
-			return Promise.reject(new InsightError("Given an invalid id " + id));
+		try {
+			checkValidId(id);
+		} catch (err) {
+			return Promise.reject(err);
 		}
-		// Check for existing id
-		if (this.DatasetHandler.isExistingDatasetIdName(id)) {
-			return Promise.reject(new InsightError("Given an already existing id " + id));
+		if (kind === InsightDatasetKind.Courses){
+			return this.CourseHandler.processData(content, id);
 		}
-		// Check for dataset type
+		// Todo: Implement rooms dataset api
 		if (kind === InsightDatasetKind.Rooms) {
-			return Promise.reject(new InsightError("Given dataset kind Rooms"));
+			return Promise.reject(new InsightError("Not Implemented Yet"));
+		} else {
+			return Promise.reject(new InsightError("Courses or rooms dataset not found"));
 		}
-		// Extract data and load to disk, return any errors
-		return new Promise((resolve, reject) => {
-			this.DatasetHandler.processData(content, id)
-				.then(function (result) {
-					resolve(result);
-				})
-				.catch(function (err) {
-					reject(err);
-				});
-		});
 	}
 
 	public removeDataset(id: string): Promise<string> {
-		// Check for valid id
-		if (!isValidDatasetIdName(id)) {
-			return Promise.reject(new InsightError("Given an invalid id " + id));
+		try {
+			checkValidId(id);
+		} catch (err) {
+			return Promise.reject(err);
 		}
-		// Search for existing id, remove from disk if it exists, error otherwise
-		return new Promise((resolve, reject) => {
-			this.DatasetHandler.removeFromDisk(id)
-				.then(function (result) {
-					resolve(result);
-				})
-				.catch(function (err) {
-					reject(err);
-				});
-		});
+		return this.CourseHandler.removeFromDisk(id);
 	}
 
 	public performQuery(queryInput: unknown): Promise<InsightResult[]> {
@@ -87,7 +71,7 @@ export default class InsightFacade implements IInsightFacade {
 			jsonToFilter(where).then((filter) => {
 				query = new Query(filter, columns, order);
 				let id = getDatasetIdFromKey(order);
-				return this.DatasetHandler.getDataFromDiskGivenId(id);
+				return this.CourseHandler.getDataFromDiskGivenId(id);
 			}).then((data) => {
 				return query.query(data);
 			}).then((queriedData) => {
@@ -106,15 +90,21 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
-		// Load datasets from disk, print each InsightDataset
-		return new Promise((resolve, reject) => {
-			this.DatasetHandler.listFromDisk()
-				.then(function (result) {
-					resolve(result);
-				})
-				.catch(function (err) {
-					reject(err);
-				});
-		});
+		return this.CourseHandler.listFromDisk();
 	}
+}
+
+/**
+ * Handles invalid id exception for add/remove dataset
+ *
+ * Will throw InsightError if id is invalid,
+ * does nothing otherwise
+ *
+ * @param id: The id of a database
+ */
+function checkValidId(id: string): Promise<string[]> | void {
+	if (!isValidDatasetIdName(id)) {
+		throw new InsightError("Given an invalid id " + id);
+	}
+	return;
 }

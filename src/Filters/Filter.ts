@@ -1,3 +1,5 @@
+import {CourseData} from "../utils/CourseData";
+
 export interface Filter {
-	query(data: Array<Array<string | number>>): Promise<Array<Array<string | number>>>;
+	query(data: CourseData[]): Promise<CourseData[]>;
 }

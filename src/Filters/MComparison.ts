@@ -1,8 +1,9 @@
 import {InsightError} from "../controller/IInsightFacade";
 import {checkCorrectTypeOfValueForKey} from "../utils/DatasetUtils";
-import {getDatasetIdFromKey, getFieldFromKey, getIndexOfGivenField} from "../utils/QueryUtils";
+import {getDatasetIdFromKey, getFieldFromKey} from "../utils/QueryUtils";
 import {Filter} from "./Filter";
 import {Query} from "../utils/Query";
+import {CourseData} from "../utils/CourseData";
 
 export class MComparison implements Filter {
 	// GT || EQ || LT
@@ -16,22 +17,25 @@ export class MComparison implements Filter {
 		this.num = num;
 	}
 
-	public query(data: Array<Array<string | number>>): Promise<Array<Array<string | number>>> {
-		let filteredData: Array<Array<string | number>> = [];
+	public query(data: CourseData[]): Promise<CourseData[]>  {
+		let filteredData: CourseData[] = [];
 		let key = getFieldFromKey(this.mKey);
-		let pos = getIndexOfGivenField(key);
 
-		for (const dataPoint of data) {
+		for (let dataPoint of data) {
+			let value = dataPoint.get(key);
+			if (typeof value !== "number") {
+				throw new InsightError("invalid type of mKey");
+			}
 			if (this.comparator === "EQ") {
-				if (dataPoint[pos] === this.num) {
+				if (value === this.num) {
 					filteredData.push(dataPoint);
 				}
 			} else if (this.comparator === "GT") {
-				if (dataPoint[pos] > this.num) {
+				if (value > this.num) {
 					filteredData.push(dataPoint);
 				}
 			} else if (this.comparator === "LT") {
-				if (dataPoint[pos] < this.num) {
+				if (value < this.num) {
 					filteredData.push(dataPoint);
 				}
 			} else {

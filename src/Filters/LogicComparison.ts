@@ -1,6 +1,7 @@
 import {jsonToFilter, queryAllFilters} from "../utils/QueryUtils";
 import {InsightError} from "../controller/IInsightFacade";
 import {Filter} from "./Filter";
+import {CourseData} from "../utils/CourseData";
 
 export class LogicComparison implements Filter {
 	// AND || OR
@@ -12,7 +13,7 @@ export class LogicComparison implements Filter {
 		this.filters = filters;
 	}
 
-	public query(data: Array<Array<string | number>>): Promise<Array<Array<string | number>>> {
+	public query(data: CourseData[]): Promise<CourseData[]>  {
 		return new Promise((resolve, reject) => {
 			queryAllFilters(this.filters, data).then((filteredDataArray) => {
 
@@ -33,7 +34,7 @@ export class LogicComparison implements Filter {
 
 				} else if (this.logic === "OR") {
 
-					let combinedData: Array<Array<string | number>> = [];
+					let combinedData: CourseData[] = [];
 					for (let filteredData of filteredDataArray) {
 						// combines the combinedData with the filteredData then filters out duplicates
 						combinedData = combinedData.concat(filteredData).filter(

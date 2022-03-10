@@ -115,6 +115,7 @@ export default class RoomHandler {
 	private extractRoomInfo(trees: any[]) {
 		for (let i = 1; i < trees.length; i++) {
 			this.extractBuildingRoomInfo(trees[i], this.buildingsDataset[i]);
+			console.log("done dfs" + i);
 		}
 	}
 
@@ -142,6 +143,7 @@ export default class RoomHandler {
 				this.roomAttributes[9] = roomFurniture.trim();
 				this.roomAttributes[10] = roomHref.trim();
 				this.roomsDataset.push(this.roomAttributes);
+				return;
 			} catch {
 				return;
 			}

@@ -110,7 +110,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should add a room dataset successfully", function() {
-			const content: string = datasetContents.get("rooms") ?? "";
+			const content: string = datasetContents.get("skipRoomsNoFurnitureField") ?? "";
 			return insightFacade.addDataset("rooms", content, InsightDatasetKind.Rooms)
 				.then((dataIDS) => {
 					expect(dataIDS).to.be.an.instanceof(Array);
@@ -544,7 +544,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should remove single room dataset successfully", function(){
-			const content: string = datasetContents.get("rooms") ?? "";
+			const content: string = datasetContents.get("skipRoomsNoFurnitureField") ?? "";
 			return insightFacade.addDataset("rooms", content, InsightDatasetKind.Rooms)
 				.then(() => {
 					return insightFacade.removeDataset("rooms")
@@ -717,7 +717,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should list one room dataset", function () {
-			const content: string = datasetContents.get("rooms") ?? "";
+			const content: string = datasetContents.get("skipRoomsNoFurnitureField") ?? "";
 			return insightFacade.addDataset("rooms", content, InsightDatasetKind.Rooms)
 				.then(() => insightFacade.listDatasets())
 				.then((insightDatasets) => {
@@ -726,7 +726,7 @@ describe("InsightFacade", function () {
 					expect(insightDatasets).to.deep.equal([{
 						id: "rooms",
 						kind: InsightDatasetKind.Rooms,
-						numRows: 364,
+						numRows: 1,
 					}]);
 				});
 		});

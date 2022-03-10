@@ -1,8 +1,7 @@
-import {InsightDataset, InsightDatasetKind, InsightError, NotFoundError} from "../controller/IInsightFacade";
+import {InsightError} from "../controller/IInsightFacade";
+import {checkExistingIdName, unzipData, checkDatasetLength, saveToDisk, grabDatasetIds} from "../utils/DatasetUtils";
 import JSZip from "jszip";
-import * as fs from "fs-extra";
-import parse5, {parse} from "parse5";
-import * as http from "http";
+import parse5 from "parse5";
 
 export default class RoomHandler {
 	private roomsDataset: any[];
@@ -18,20 +17,13 @@ export default class RoomHandler {
 	}
 
 	// TODO:
-	//  - turn index.htm into tree1, wait for result
-	//  - Extract Building Info from tree1 w/ DFS
-	//  - Save each building info in buildingAttributes[] + append to buildingsDataset[]
-	//  - For each building inside buildingsDataset[], use href to make tree234.., append to promise list
-	//  - After promise.all, extract room info from tree234.. (need to make sure a building knows its rooms somehow?)
-	//  - Save each room info to roomAttributes[] (with combined buildingAttributes) + append to roomsDataset[]
-	//  - Extract addresses from roomsDataset[] to find GeoLocations, save results to roomsDataset[]
-	//  - Save roomsDataset[] to disk
+	// 	- Implement geolocation lat/lon
 	public processData(content: string, id: string): Promise<string[]> {
 		this.roomsDataset = [];
 		this.buildingsDataset = [];
 		return new Promise((resolve, reject) => {
-			this.checkExistingIdName(id);
-			this.unzipData(content)
+			checkExistingIdName(id);
+			unzipData(content)
 				.then((unZippedContent) => {
 					try {
 						return unZippedContent.file("rooms/index.htm").async("string");
@@ -42,7 +34,7 @@ export default class RoomHandler {
 				.then((data: any) => {
 					const document = parse5.parse(data);
 					this.extractBuildingInfo(document);
-					return this.unzipData(content);
+					return unzipData(content);
 				})
 				.then((unZippedContent) => {
 					return Promise.all(this.grabRoomHtmlFiles(unZippedContent));
@@ -50,10 +42,10 @@ export default class RoomHandler {
 				.then((files) => {
 					let trees = this.turnFilesIntoTrees(files);
 					this.extractRoomInfo(trees);
-					this.checkDatasetLength();
-					return this.saveToDisk(id);
+					checkDatasetLength(this.roomsDataset);
+					saveToDisk(id, this.roomsDataset);
 				}).then(() => {
-					return this.grabDatasetIds();
+					return grabDatasetIds();
 				}).then(function (addedIds) {
 					resolve(addedIds);
 				})
@@ -61,29 +53,6 @@ export default class RoomHandler {
 					reject(err);
 				});
 		});
-	}
-
-	private unzipData(content: string): Promise<any> {
-		return new Promise((resolve, reject) => {
-			let zip = new JSZip();
-			zip.loadAsync(content, {base64: true}).then(function (result) {
-				resolve(result);
-			}).catch(function () {
-				reject(new InsightError("Given a non zip file"));
-			});
-		});
-	}
-
-	private checkExistingIdName(id: string): void {
-		if (fs.existsSync("./data/")) {
-			fs.readdirSync("./data/").forEach((file) => {
-				let datasetIdName = file.substring(0, file.length - 4);
-				if (id === datasetIdName) {
-					throw new InsightError("Given an already existing id " + id);
-				}
-			});
-		}
-		return;
 	}
 
 	private extractBuildingInfo(document: any) {
@@ -118,7 +87,6 @@ export default class RoomHandler {
 
 	private grabRoomHtmlFiles(unZippedContent: JSZip): Array<Promise<any> | undefined > {
 		let promiseArray: Array<Promise<any> | undefined > = [];
-		// eslint-disable-next-line @typescript-eslint/prefer-for-of
 		for (let i = 0; i < this.buildingsDataset.length; i++) {
 			let buildingHref = this.buildingsDataset[i][3];
 			if (unZippedContent.file("rooms" + buildingHref) !== null) {
@@ -135,10 +103,9 @@ export default class RoomHandler {
 
 	private turnFilesIntoTrees(files: any[]): any[] {
 		let trees = [];
-		// eslint-disable-next-line @typescript-eslint/prefer-for-of
-		for (let i = 0; i < files.length; i++) {
-			if (files[i] !== undefined) {
-				const document = parse5.parse(files[i]);
+		for (const item of files) {
+			if (item !== undefined) {
+				const document = parse5.parse(item);
 				trees.push(document);
 			}
 		}
@@ -187,31 +154,5 @@ export default class RoomHandler {
 			return;
 		}
 		return;
-	}
-
-	private checkDatasetLength(): void {
-		if (this.roomsDataset.length === 0) {
-			throw new InsightError("No valid rooms exist");
-		}
-		return;
-	}
-
-	private saveToDisk(id: string): void {
-		if (!fs.existsSync("./data/")) {
-			fs.mkdirSync("./data/");
-		}
-		const path = "./data/" + id + ".txt";
-		fs.writeFileSync(path, JSON.stringify(this.roomsDataset));
-	}
-
-	private grabDatasetIds(): Promise<string[]> {
-		let datasetIdNames: string[] = [];
-		fs.readdirSync("./data/").forEach((file) => {
-			let datasetIdName = file.substring(0, file.length - 4);
-			datasetIdNames.push(datasetIdName);
-		});
-		return new Promise(function (resolve) {
-			resolve(datasetIdNames);
-		});
 	}
 }

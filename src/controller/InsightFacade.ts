@@ -12,7 +12,7 @@ import {
 	jsonToFilter, toInsightResult, checkValidQueryParameters, getDatasetIdFromKey
 } from "../utils/QueryUtils";
 
-import {isValidDatasetIdName} from "../utils/DatasetUtils";
+import {listFromDisk, removeFromDisk, checkValidId} from "../utils/DatasetUtils";
 import CourseHandler from "../utils/CourseHandler";
 import RoomHandler from "../utils/RoomHandler";
 import {Query} from "../utils/Query";
@@ -50,7 +50,7 @@ export default class InsightFacade implements IInsightFacade {
 		} catch (err) {
 			return Promise.reject(err);
 		}
-		return this.CourseHandler.removeFromDisk(id);
+		return removeFromDisk(id);
 	}
 
 	public performQuery(queryInput: unknown): Promise<InsightResult[]> {
@@ -89,21 +89,7 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
-		return this.CourseHandler.listFromDisk();
+		return listFromDisk();
 	}
 }
 
-/**
- * Handles invalid id exception for add/remove dataset
- *
- * Will throw InsightError if id is invalid,
- * does nothing otherwise
- *
- * @param id: The id of a database
- */
-function checkValidId(id: string): Promise<string[]> | void {
-	if (!isValidDatasetIdName(id)) {
-		throw new InsightError("Given an invalid id " + id);
-	}
-	return;
-}

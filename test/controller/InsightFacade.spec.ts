@@ -120,7 +120,6 @@ describe("InsightFacade", function () {
 					expect(insightDatasetCourses).to.equal("rooms");
 				})
 				.catch((err) => {
-					console.log(err);
 					expect.fail("Should not execute");
 				});
 		});
@@ -351,7 +350,6 @@ describe("InsightFacade", function () {
 					});
 				})
 				.catch((err) => {
-					console.log(err);
 					expect.fail("Should not execute");
 				});
 		});
@@ -390,7 +388,6 @@ describe("InsightFacade", function () {
 					});
 				})
 				.catch((err) => {
-					console.log(err);
 					expect.fail("Should not execute");
 				});
 		});
@@ -410,7 +407,6 @@ describe("InsightFacade", function () {
 					});
 				})
 				.catch((err) => {
-					console.log(err);
 					expect.fail("Should not execute");
 				});
 		});
@@ -727,7 +723,6 @@ describe("InsightFacade", function () {
 				.then((insightDatasets) => {
 					expect(insightDatasets).to.be.an.instanceof(Array);
 					expect(insightDatasets).to.have.length(1);
-					console.log(insightDatasets);
 					expect(insightDatasets).to.deep.equal([{
 						id: "rooms",
 						kind: InsightDatasetKind.Rooms,

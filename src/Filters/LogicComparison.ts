@@ -1,6 +1,7 @@
 import {jsonToFilter, queryAllFilters} from "../utils/QueryUtils";
 import {InsightError} from "../controller/IInsightFacade";
 import {Filter} from "./Filter";
+import {CourseData} from "../utils/CourseData";
 
 export class LogicComparison implements Filter {
 	// AND || OR
@@ -12,8 +13,8 @@ export class LogicComparison implements Filter {
 		this.filters = filters;
 	}
 
-	public query(data: Array<Array<string | number>>): Promise<Array<Array<string | number>>> {
-		return new Promise((resolve) => {
+	public query(data: CourseData[]): Promise<CourseData[]>  {
+		return new Promise((resolve, reject) => {
 			queryAllFilters(this.filters, data).then((filteredDataArray) => {
 
 				if (this.logic === "AND") {
@@ -31,9 +32,9 @@ export class LogicComparison implements Filter {
 
 					resolve(filteredDataArray[0]);
 
-				} else {
+				} else if (this.logic === "OR") {
 
-					let combinedData: Array<Array<string | number>> = [];
+					let combinedData: CourseData[] = [];
 					for (let filteredData of filteredDataArray) {
 						// combines the combinedData with the filteredData then filters out duplicates
 						combinedData = combinedData.concat(filteredData).filter(
@@ -44,6 +45,8 @@ export class LogicComparison implements Filter {
 
 					resolve(combinedData);
 
+				} else {
+					reject(new InsightError("Invalid logic " + this.logic));
 				}
 			});
 		});

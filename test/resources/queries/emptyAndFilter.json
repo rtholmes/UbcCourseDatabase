@@ -1,8 +1,8 @@
 {
-	"title": "having a missing WHERE passes on data as is without filtering",
+	"title": "should reject AND LOGICCOMPARISON queries with empty filter array",
 	"input": {
 		"WHERE": {
-
+			"AND": []
 		},
 		"OPTIONS": {
 			"COLUMNS": [
@@ -14,5 +14,5 @@
 		}
 	},
 	"errorExpected": true,
-	"expected": "ResultTooLargeError"
+	"expected": "InsightError"
 }

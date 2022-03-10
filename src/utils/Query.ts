@@ -1,6 +1,7 @@
-import {getFieldFromKey, getIndexOfGivenField} from "./QueryUtils";
+import {getDatasetIdFromKey, getFieldFromKey} from "./QueryUtils";
 import {InsightError} from "../controller/IInsightFacade";
 import {Filter} from "../Filters/Filter";
+import {CourseData} from "./CourseData";
 
 export class Query {
 	public where: Filter;
@@ -12,6 +13,11 @@ export class Query {
 		this.where = where;
 		this.columns = columns;
 		this.order = order;
+
+		for (let column of this.columns) {
+			Query.isRepeatDataId(getDatasetIdFromKey(column));
+		}
+		Query.isRepeatDataId(getDatasetIdFromKey(order));
 	}
 
 	public static isRepeatDataId(str: string) {
@@ -25,20 +31,21 @@ export class Query {
 		}
 	}
 
-	public query(data: Array<Array<string | number>>): Promise<Array<Array<string | number>>> {
+	public query(data: CourseData[]): Promise<CourseData[]> {
 		return this.where.query(data);
 	}
 
-	public truncateSections(data: Array<Array<string | number>>): Promise<Array<Array<string | number>>> {
-		let returnVal: Array<Array<string | number>> = [];
-		let orderOfFields: number[] = [];
-		for (let column of this.columns) {
-			orderOfFields.push(getIndexOfGivenField(getFieldFromKey(column)));
-		}
+	public truncateSections(data: CourseData[]): Promise<CourseData[]> {
+		let returnVal: CourseData[] = [];
+		let value: string | number | undefined;
 		for (let dataPoint of data) {
-			let orderedDataPoint: Array<string | number> = [];
-			for (let field of orderOfFields) {
-				orderedDataPoint.push(dataPoint[field]);
+			let orderedDataPoint: CourseData = new CourseData(new Map<string, string | number>());
+			for (let column of this.columns) {
+				value = dataPoint.get(getFieldFromKey(column));
+				if (value === undefined) {
+					throw new InsightError("Invalid key");
+				}
+				orderedDataPoint.set(column, value);
 			}
 			returnVal.push(orderedDataPoint);
 		}
@@ -48,23 +55,27 @@ export class Query {
 		});
 	}
 
-	public organizeSections(data: Array<Array<string | number>>): Promise<Array<Array<string | number>>> {
-		let map: Map<string | number, Array<Array<number | string>>> = new Map();
+	public organizeSections(data: CourseData[]): Promise<CourseData[]> {
+		let map: Map<string | number, CourseData[]> = new Map();
 
-		let orderIndex: number = getIndexOfGivenField(getFieldFromKey(this.order));
+		let key: string = getFieldFromKey(this.order);
 
 		for (const dataPoint of data) {
-			let valOfMapAtDataPoint: Array<Array<string | number>> | undefined = map.get(dataPoint[orderIndex]);
+			let value: string | number | undefined = dataPoint.get(key);
+			if (value === undefined) {
+				throw new InsightError("Invalid key");
+			}
+			let valOfMapAtDataPoint = map.get(value);
 			if (valOfMapAtDataPoint === undefined) {
 				valOfMapAtDataPoint = [];
 			}
 			valOfMapAtDataPoint.push(dataPoint);
-			map.set(dataPoint[orderIndex], valOfMapAtDataPoint);
+			map.set(value, valOfMapAtDataPoint);
 		}
 
 		const sortedMap = new Map([...map.entries()].sort());
 
-		let returnVal: Array<Array<string | number>> = [];
+		let returnVal: CourseData[] = [];
 
 		for (let val of sortedMap.values()) {
 			for (let valElement of val.reverse()) {

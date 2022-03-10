@@ -1,7 +1,7 @@
 import {InsightDataset, InsightDatasetKind, InsightError, NotFoundError} from "../controller/IInsightFacade";
 import JSZip from "jszip";
 import * as fs from "fs-extra";
-import {isString} from "util";
+import {CourseData} from "./CourseData";
 
 export default class CourseHandler {
 	private coursesDataset: any[];
@@ -210,26 +210,17 @@ export default class CourseHandler {
 	 * and will only fulfill
 	 */
 	public listFromDisk(): Promise<InsightDataset[]> {
-		let dataset: InsightDataset;
 		let addedInsightDatasets: InsightDataset[] = [];
 		if (fs.existsSync("./data/")) {
 			fs.readdirSync("./data/").forEach((file) => {
 				let path = "./data/" + file;
 				this.coursesDataset = JSON.parse(fs.readFileSync(path, "utf8"));
 				let datasetIdName = file.substring(0, file.length - 4);
-				if (typeof (this.coursesDataset[0][2]) === "string") {
-					dataset = {
-						id: datasetIdName,
-						kind: InsightDatasetKind.Rooms,
-						numRows: this.coursesDataset.length
-					};
-				} else {
-					dataset = {
-						id: datasetIdName,
-						kind: InsightDatasetKind.Courses,
-						numRows: this.coursesDataset.length
-					};
-				}
+				let dataset: InsightDataset = {
+					id: datasetIdName,
+					kind: InsightDatasetKind.Courses,
+					numRows: this.coursesDataset.length
+				};
 				addedInsightDatasets.push(dataset);
 			});
 		}
@@ -244,11 +235,28 @@ export default class CourseHandler {
 	 * Will return with the requested course database as a 2D array,
 	 * Will throw InsightError if database with given id does not exist
 	 */
-	public getDataFromDiskGivenId(id: string): Promise<Array<Array<string | number>>> {
+	public getDataFromDiskGivenId(id: string): Promise<CourseData[]> {
 		return new Promise(function (resolve, reject) {
 			if (fs.existsSync("./data/")) {
 				let path: string = "./data/" + id + ".txt";
-				resolve(JSON.parse(fs.readFileSync(path,"utf8")));
+				let jsons = JSON.parse(fs.readFileSync(path,"utf8"));
+				let returnVal: CourseData[] = [];
+				for (let json of jsons) {
+					let attributes = new Map([
+						["dept", json[0]],
+						["id", json[1]],
+						["avg", json[2]],
+						["instructor", json[3]],
+						["title", json[4]],
+						["pass", json[5]],
+						["fail", json[6]],
+						["audit", json[7]],
+						["uuid", json[8]],
+						["year", json[9]]
+					]);
+					returnVal.push(new CourseData(attributes));
+				}
+				resolve(returnVal);
 			} else {
 				reject(new InsightError(`Could not find data in folder with id: ${id}`));
 			}

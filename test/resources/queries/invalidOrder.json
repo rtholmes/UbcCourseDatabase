@@ -1,8 +1,10 @@
 {
-	"title": "should reject LOGICCOMPARISON queries with empty filter array",
+	"title": "should reject when order is not a valid key",
 	"input": {
 		"WHERE": {
-			"AND": []
+			"GT": {
+				"courses_avg": 98.75
+			}
 		},
 		"OPTIONS": {
 			"COLUMNS": [
@@ -10,7 +12,7 @@
 				"courses_id",
 				"courses_avg"
 			],
-			"ORDER": "courses_avg"
+			"ORDER": "foo"
 		}
 	},
 	"errorExpected": true,

@@ -15,65 +15,6 @@ function isValidDatasetIdName(id: string): boolean {
 }
 
 /**
- * query keys use "courses_<key>" whereas in the data is just <key>
- * This helper verifies that it is a valid key then returns the translated key
- * Throws InsightError if there is not a valid key
- *
- *
- * @param key: The key of the InsightResult
- *
- */
-function translateIdToMatchDatasetStyle(key: string): string {
-	let newKey: string;
-	switch (key) {
-		case "courses_dept": {
-			newKey = "dept";
-			break;
-		}
-		case "courses_id": {
-			newKey = "id";
-			break;
-		}
-		case "courses_avg": {
-			newKey = "avg";
-			break;
-		}
-		case "courses_instructor": {
-			newKey = "instructor";
-			break;
-		}
-		case "courses_title": {
-			newKey = "title";
-			break;
-		}
-		case "courses_pass": {
-			newKey = "pass";
-			break;
-		}
-		case "courses_fail": {
-			newKey = "fail";
-			break;
-		}
-		case "courses_audit": {
-			newKey = "audit";
-			break;
-		}
-		case "courses_uuid": {
-			newKey = "uuid";
-			break;
-		}
-		case "courses_year": {
-			newKey = "year";
-			break;
-		}
-		default: {
-			throw new InsightError("Given an invalid key " + key);
-		}
-	}
-	return newKey;
-}
-
-/**
  * Takes key and then verifies if the attched datatype is of the correct type
  * If it does not match throws InsightError
  *
@@ -82,51 +23,40 @@ function translateIdToMatchDatasetStyle(key: string): string {
  * @param value: value of the InsightResult
  */
 function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
+	let mFields = [
+		"avg",
+		"pass",
+		"fail",
+		"audit",
+		"year",
+		"lat",
+		"lon",
+		"seats"
+	];
+	let sFields = [
+		"dept",
+		"id",
+		"instructor",
+		"title",
+		"uuid",
+		"fullname",
+		"shortname",
+		"number",
+		"name",
+		"address",
+		"type",
+		"furniture",
+		"href"
+	];
+
 	let expectedDatatype: string;
-	switch (key) {
-		case "dept": {
-			expectedDatatype = "string";
-			break;
-		}
-		case "id": {
-			expectedDatatype = "string";
-			break;
-		}
-		case "avg": {
-			expectedDatatype = "number";
-			break;
-		}
-		case "instructor": {
-			expectedDatatype = "string";
-			break;
-		}
-		case "title": {
-			expectedDatatype = "string";
-			break;
-		}
-		case "pass": {
-			expectedDatatype = "number";
-			break;
-		}
-		case "fail": {
-			expectedDatatype = "number";
-			break;
-		}
-		case "audit": {
-			expectedDatatype = "number";
-			break;
-		}
-		case "uuid": {
-			expectedDatatype = "string";
-			break;
-		}
-		case "year": {
-			expectedDatatype = "number";
-			break;
-		}
-		default: {
-			throw new InsightError("Given an invalid key " + key);
-		}
+
+	if (mFields.includes(key)) {
+		expectedDatatype = "number";
+	} else if (sFields.includes(key)) {
+		expectedDatatype = "string";
+	} else {
+		throw new InsightError("Given an invalid key " + key);
 	}
 	checkIdProperDatatype(value, expectedDatatype, key);
 }
@@ -152,7 +82,6 @@ function checkIdProperDatatype(value: string | number, expectedTypeOfValue: stri
 
 export {
 	isValidDatasetIdName,
-	translateIdToMatchDatasetStyle,
 	checkCorrectTypeOfValueForKey,
 	checkIdProperDatatype
 };

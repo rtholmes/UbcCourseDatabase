@@ -1,26 +1,17 @@
-Please edit this template and commit to the master branch for your user stories submission.   
-Make sure to follow the *Role, Goal, Benefit* framework for the user stories and the *Given/When/Then* framework for the Definitions of Done! You can also refer to the examples DoDs in [C3 spec](https://sites.google.com/view/ubc-cpsc310-21w2-intro-to-se/project/checkpoint-3).
-
 ## User Story 1
-As a \<role\>, I want to \<goal\>, so that \<benefit\>.
+As a discord user, I want to generate and select query options so that I can create a query
 
-
-#### Definitions of Done(s)
-Scenario 1: \<The name for the behaviour that will be described\>  
-Given: \<Some initial application state (precondition)\>  
-When: \<The user do some series of action\>  
-Then: \<Some outcome state is expected (post-condition)\>
+#### Definitions of Done
+Scenario 1: Creating a Query  
+Given: The discord user calls a bot which gives it the option to customize settings  
+When: The bot will display all settings that can be customized Filters, Columns, Sort, Group, Apply for the user to select  
+Then: The user can then save the query to be used for a future queries  
 
 ## User Story 2
-As a \<role\>, I want to \<goal\>, so that \<benefit\>.
+As a discord user, I want to tell the bot to verify then run a query, so I can view the results or get an error message if invalid
 
-
-#### Definitions of Done(s)
-Scenario 1: \<The name for the behaviour that will be described\>  
-Given: \<Some initial application state (precondition)\>  
-When: \<The user do some series of action\>  
-Then: \<Some outcome state is expected (post-condition)\>
-
-## Others
-You may provide any additional user stories + DoDs in this section for general TA feedback.  
-Note: These will not be graded.
+#### Definitions of Done
+Scenario 1: Running a Query  
+Given: The discord user calls the bot to run a query  
+When: The bot verifies the query and runs it  
+Then: The bot returns the results to the discord user or an error message explaining the error

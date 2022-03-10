@@ -27,21 +27,35 @@ export default class RoomHandler {
 	//  - Extract addresses from roomsDataset[] to find GeoLocations, save results to roomsDataset[]
 	//  - Save roomsDataset[] to disk
 	public processData(content: string, id: string): Promise<string[]> {
+		this.roomsDataset = [];
+		this.buildingsDataset = [];
 		return new Promise((resolve, reject) => {
 			this.checkExistingIdName(id);
 			this.unzipData(content)
 				.then((unZippedContent) => {
 					try {
-						return unZippedContent.file("rooms/index.htm").async("string").then((data: any) => {
-							const document = parse5.parse(data);
-							this.doSomeDFS(document, unZippedContent);
-							console.log(this.roomsDataset);
-							console.log(this.roomAttributes);
-							resolve(Promise.reject("Not implemented."));
-						});
+						return unZippedContent.file("rooms/index.htm").async("string");
 					} catch {
-						reject(new InsightError("No Rooms Folder"));
+						throw new InsightError("No rooms folder exists");
 					}
+				})
+				.then((data: any) => {
+					const document = parse5.parse(data);
+					this.extractBuildingInfo(document);
+					return this.unzipData(content);
+				})
+				.then((unZippedContent) => {
+					return Promise.all(this.grabRoomHtmlFiles(unZippedContent));
+				})
+				.then((files) => {
+					let trees = this.turnFilesIntoTrees(files);
+					this.extractRoomInfo(trees);
+					this.checkDatasetLength();
+					return this.saveToDisk(id);
+				}).then(() => {
+					return this.grabDatasetIds();
+				}).then(function (addedIds) {
+					resolve(addedIds);
 				})
 				.catch(function (err) {
 					reject(err);
@@ -72,26 +86,29 @@ export default class RoomHandler {
 		return;
 	}
 
-	private doSomeDFS(document: any, unZippedContent: any) {
+	private extractBuildingInfo(document: any) {
 		if (document.nodeName === "tr") {
 			try {
+				this.buildingAttributes = [];
 				let buildingCode = document.childNodes[3].childNodes[0].value;
 				let buildingTitle = document.childNodes[5].childNodes[1].childNodes[0].value;
 				let buildingAddress = document.childNodes[7].childNodes[0].value;
-				let buildingHref = document.childNodes[5].childNodes[1].attrs[0].value.substring(1);
-				this.roomAttributes[0] = buildingTitle.trim();
-				this.roomAttributes[1] = buildingCode.trim();
-				this.roomAttributes[4] = buildingAddress.trim();
-				return this.grabRooms(buildingHref, unZippedContent).then(() => {
+				if (buildingAddress.trim() === "") {
 					return;
-				});
+				}
+				let buildingHref = document.childNodes[5].childNodes[1].attrs[0].value.substring(1);
+				this.buildingAttributes[0] = buildingTitle.trim();
+				this.buildingAttributes[1] = buildingCode.trim();
+				this.buildingAttributes[2] = buildingAddress.trim();
+				this.buildingAttributes[3] = buildingHref.trim();
+				this.buildingsDataset.push(this.buildingAttributes);
 			} catch {
 				return;
 			}
 		}
 		try {
 			for (let i = 0; i <= document.childNodes.length; i++) {
-				this.doSomeDFS(document.childNodes[i], unZippedContent);
+				this.extractBuildingInfo(document.childNodes[i]);
 			}
 		} catch {
 			return;
@@ -99,31 +116,61 @@ export default class RoomHandler {
 		return;
 	}
 
-	private grabRooms(buildingHref: string, unZippedContent: any) {
-		return new Promise((resolve, reject) => {
-			try {
-				return unZippedContent.file("rooms" + buildingHref).async("string").then((data: any) => {
-					const document = parse5.parse(data);
-					resolve(this.doMoreDFS(document));
-				});
-			} catch {
-				// Room folder does not exist, skip over
-				return;
+	private grabRoomHtmlFiles(unZippedContent: JSZip): Array<Promise<any> | undefined > {
+		let promiseArray: Array<Promise<any> | undefined > = [];
+		// eslint-disable-next-line @typescript-eslint/prefer-for-of
+		for (let i = 0; i < this.buildingsDataset.length; i++) {
+			let buildingHref = this.buildingsDataset[i][3];
+			if (unZippedContent.file("rooms" + buildingHref) !== null) {
+				promiseArray.push(unZippedContent.file("rooms" + buildingHref)?.async("string"));
+			} else {
+				this.buildingsDataset[i] = undefined;
 			}
+		}
+		this.buildingsDataset = this.buildingsDataset.filter(function (element) {
+			return element !== undefined;
 		});
+		return promiseArray;
 	}
 
-	private doMoreDFS(document: any) {
-		if (document.nodeName === "tr") {
+	private turnFilesIntoTrees(files: any[]): any[] {
+		let trees = [];
+		// eslint-disable-next-line @typescript-eslint/prefer-for-of
+		for (let i = 0; i < files.length; i++) {
+			if (files[i] !== undefined) {
+				const document = parse5.parse(files[i]);
+				trees.push(document);
+			}
+		}
+		return trees;
+	}
+
+	private extractRoomInfo(trees: any[]) {
+		for (let i = 1; i < trees.length; i++) {
+			this.extractBuildingRoomInfo(trees[i], this.buildingsDataset[i]);
+		}
+	}
+
+	private extractBuildingRoomInfo(treeElement: any, buildingsDatasetElement: any) {
+		if (treeElement.nodeName === "tr") {
 			try {
-				let roomNumber = document.childNodes[1].childNodes[1].childNodes[0].value;
-				let roomCapacity = document.childNodes[3].childNodes[0].value;
-				let roomFurniture = document.childNodes[5].childNodes[0].value;
-				let roomType = document.childNodes[7].childNodes[0].value;
-				let roomHref = document.childNodes[9].childNodes[1].attrs[0].value;
+				this.roomAttributes = [];
+				let roomNumber = treeElement.childNodes[1].childNodes[1].childNodes[0].value;
+				let roomCapacity = treeElement.childNodes[3].childNodes[0].value;
+				if (roomCapacity.trim() === ""){
+					roomCapacity = 0;
+				} else {
+					roomCapacity = Number(roomCapacity.trim());
+				}
+				let roomFurniture = treeElement.childNodes[5].childNodes[0].value;
+				let roomType = treeElement.childNodes[7].childNodes[0].value;
+				let roomHref = treeElement.childNodes[9].childNodes[1].attrs[0].value;
+				this.roomAttributes[0] = buildingsDatasetElement[0];
+				this.roomAttributes[1] = buildingsDatasetElement[1];
 				this.roomAttributes[2] = roomNumber.trim();
 				this.roomAttributes[3] = this.roomAttributes[1] + "_" + roomNumber.trim();
-				this.roomAttributes[7] = roomCapacity.trim();
+				this.roomAttributes[4] = buildingsDatasetElement[2];
+				this.roomAttributes[7] = roomCapacity;
 				this.roomAttributes[8] = roomType.trim();
 				this.roomAttributes[9] = roomFurniture.trim();
 				this.roomAttributes[10] = roomHref.trim();
@@ -133,12 +180,38 @@ export default class RoomHandler {
 			}
 		}
 		try {
-			for (let i = 0; i <= document.childNodes.length; i++) {
-				this.doMoreDFS(document.childNodes[i]);
+			for (let i = 0; i <= treeElement.childNodes.length; i++) {
+				this.extractBuildingRoomInfo(treeElement.childNodes[i], buildingsDatasetElement);
 			}
 		} catch {
 			return;
 		}
 		return;
+	}
+
+	private checkDatasetLength(): void {
+		if (this.roomsDataset.length === 0) {
+			throw new InsightError("No valid rooms exist");
+		}
+		return;
+	}
+
+	private saveToDisk(id: string): void {
+		if (!fs.existsSync("./data/")) {
+			fs.mkdirSync("./data/");
+		}
+		const path = "./data/" + id + ".txt";
+		fs.writeFileSync(path, JSON.stringify(this.roomsDataset));
+	}
+
+	private grabDatasetIds(): Promise<string[]> {
+		let datasetIdNames: string[] = [];
+		fs.readdirSync("./data/").forEach((file) => {
+			let datasetIdName = file.substring(0, file.length - 4);
+			datasetIdNames.push(datasetIdName);
+		});
+		return new Promise(function (resolve) {
+			resolve(datasetIdNames);
+		});
 	}
 }

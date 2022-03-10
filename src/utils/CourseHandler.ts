@@ -1,6 +1,7 @@
 import {InsightDataset, InsightDatasetKind, InsightError, NotFoundError} from "../controller/IInsightFacade";
 import JSZip from "jszip";
 import * as fs from "fs-extra";
+import {isString} from "util";
 
 export default class CourseHandler {
 	private coursesDataset: any[];
@@ -209,17 +210,26 @@ export default class CourseHandler {
 	 * and will only fulfill
 	 */
 	public listFromDisk(): Promise<InsightDataset[]> {
+		let dataset: InsightDataset;
 		let addedInsightDatasets: InsightDataset[] = [];
 		if (fs.existsSync("./data/")) {
 			fs.readdirSync("./data/").forEach((file) => {
 				let path = "./data/" + file;
 				this.coursesDataset = JSON.parse(fs.readFileSync(path, "utf8"));
 				let datasetIdName = file.substring(0, file.length - 4);
-				let dataset: InsightDataset = {
-					id: datasetIdName,
-					kind: InsightDatasetKind.Courses,
-					numRows: this.coursesDataset.length
-				};
+				if (typeof (this.coursesDataset[0][2]) === "string") {
+					dataset = {
+						id: datasetIdName,
+						kind: InsightDatasetKind.Rooms,
+						numRows: this.coursesDataset.length
+					};
+				} else {
+					dataset = {
+						id: datasetIdName,
+						kind: InsightDatasetKind.Courses,
+						numRows: this.coursesDataset.length
+					};
+				}
 				addedInsightDatasets.push(dataset);
 			});
 		}

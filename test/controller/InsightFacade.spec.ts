@@ -89,7 +89,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should add multiple course datasets successfully", function() {
-			const content: string = datasetContents.get("courses") ?? "";
+			const content: string = datasetContents.get("skipInvalidJSON") ?? "";
 			return insightFacade.addDataset("courses1", content, InsightDatasetKind.Courses)
 				.then(() => {
 					return insightFacade.addDataset("courses2", content, InsightDatasetKind.Courses);
@@ -119,13 +119,14 @@ describe("InsightFacade", function () {
 					expect(insightDatasetCourses).to.exist;
 					expect(insightDatasetCourses).to.equal("rooms");
 				})
-				.catch(() => {
+				.catch((err) => {
+					console.log(err);
 					expect.fail("Should not execute");
 				});
 		});
 
 		it("should add multiple room datasets successfully", function() {
-			const content: string = datasetContents.get("rooms") ?? "";
+			const content: string = datasetContents.get("skipRoomsNoFurnitureField") ?? "";
 			return insightFacade.addDataset("rooms1", content, InsightDatasetKind.Rooms)
 				.then(() => {
 					return insightFacade.addDataset("rooms2", content, InsightDatasetKind.Rooms);
@@ -388,7 +389,8 @@ describe("InsightFacade", function () {
 						}]);
 					});
 				})
-				.catch(() => {
+				.catch((err) => {
+					console.log(err);
 					expect.fail("Should not execute");
 				});
 		});
@@ -566,7 +568,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should remove multiple room datasets successfully", function(){
-			const content: string = datasetContents.get("rooms") ?? "";
+			const content: string = datasetContents.get("skipRoomsNoFurnitureField") ?? "";
 			return insightFacade.addDataset("rooms1", content, InsightDatasetKind.Rooms)
 				.then(() => {
 					return insightFacade.addDataset("rooms2", content, InsightDatasetKind.Rooms)
@@ -725,6 +727,7 @@ describe("InsightFacade", function () {
 				.then((insightDatasets) => {
 					expect(insightDatasets).to.be.an.instanceof(Array);
 					expect(insightDatasets).to.have.length(1);
+					console.log(insightDatasets);
 					expect(insightDatasets).to.deep.equal([{
 						id: "rooms",
 						kind: InsightDatasetKind.Rooms,
@@ -734,7 +737,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should list multiple room datasets", function () {
-			const content: string = datasetContents.get("rooms") ?? "";
+			const content: string = datasetContents.get("skipRoomsNoFurnitureField") ?? "";
 			return insightFacade.addDataset("rooms1", content, InsightDatasetKind.Rooms)
 				.then(() => insightFacade.addDataset("rooms2", content, InsightDatasetKind.Rooms))
 				.then(() => insightFacade.listDatasets())
@@ -746,14 +749,14 @@ describe("InsightFacade", function () {
 					expect(insightDatasetCourses).to.deep.equal({
 						id: "rooms1",
 						kind: InsightDatasetKind.Rooms,
-						numRows: 364,
+						numRows: 1,
 					});
 					const insightDatasetCourses2 = insightDatasets.find((dataset2) => dataset2.id === "rooms2");
 					expect(insightDatasetCourses2).to.exist;
 					expect(insightDatasetCourses2).to.deep.equal({
 						id: "rooms2",
 						kind: InsightDatasetKind.Rooms,
-						numRows: 364,
+						numRows: 1,
 					});
 				});
 		});

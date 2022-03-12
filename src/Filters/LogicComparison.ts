@@ -13,12 +13,10 @@ export class LogicComparison implements Filter {
 		this.filters = filters;
 	}
 
-	public query(data: CourseData[]): Promise<CourseData[]>  {
+	public query(data: CourseData[]): Promise<CourseData[]> {
 		return new Promise((resolve, reject) => {
 			queryAllFilters(this.filters, data).then((filteredDataArray) => {
-
 				if (this.logic === "AND") {
-
 					// filter out repeat elements
 					filteredDataArray[0] = filteredDataArray[0].filter((element) => {
 						let bool = true;
@@ -31,20 +29,16 @@ export class LogicComparison implements Filter {
 					});
 
 					resolve(filteredDataArray[0]);
-
 				} else if (this.logic === "OR") {
-
 					let combinedData: CourseData[] = [];
 					for (let filteredData of filteredDataArray) {
 						// combines the combinedData with the filteredData then filters out duplicates
-						combinedData = combinedData.concat(filteredData).filter(
-							function (dataPoint, index, self) {
-								return index === self.indexOf(dataPoint);
-							});
+						combinedData = combinedData.concat(filteredData).filter(function (dataPoint, index, self) {
+							return index === self.indexOf(dataPoint);
+						});
 					}
 
 					resolve(combinedData);
-
 				} else {
 					reject(new InsightError("Invalid logic " + this.logic));
 				}
@@ -65,7 +59,7 @@ export class LogicComparison implements Filter {
 export function logicComparisonConstructor(logic: string, json: object[]): LogicComparison {
 	let filters: Filter[] = [];
 
-	if (json.length === 0 ) {
+	if (json.length === 0) {
 		throw new InsightError("Given empty filter list for logic comparison");
 	}
 

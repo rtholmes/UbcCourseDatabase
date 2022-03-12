@@ -21,10 +21,12 @@ export default class RoomHandler {
 	public processData(content: string, id: string): Promise<string[]> {
 		this.roomsDataset = [];
 		this.buildingsDataset = [];
+		let zipContent: JSZip;
 		return new Promise((resolve, reject) => {
 			checkExistingIdName(id);
 			unzipData(content)
-				.then((unZippedContent) => {
+				.then(function (unZippedContent) {
+					zipContent = unZippedContent;
 					try {
 						return unZippedContent.file("rooms/index.htm").async("string");
 					} catch {
@@ -34,19 +36,18 @@ export default class RoomHandler {
 				.then((data: any) => {
 					const document = parse5.parse(data);
 					this.extractBuildingInfo(document);
-					return unzipData(content);
-				})
-				.then((unZippedContent) => {
-					return Promise.all(this.grabRoomHtmlFiles(unZippedContent));
+					return Promise.all(this.grabRoomHtmlFiles(zipContent));
 				})
 				.then((files) => {
 					let trees = this.turnFilesIntoTrees(files);
 					this.extractRoomInfo(trees);
 					checkDatasetLength(this.roomsDataset);
 					saveToDisk(id, this.roomsDataset);
-				}).then(() => {
+				})
+				.then(() => {
 					return grabDatasetIds();
-				}).then(function (addedIds) {
+				})
+				.then(function (addedIds) {
 					resolve(addedIds);
 				})
 				.catch(function (err) {
@@ -58,6 +59,7 @@ export default class RoomHandler {
 	private extractBuildingInfo(document: any) {
 		if (document.nodeName === "tr") {
 			try {
+				// todo: try doing this again cause children might not exist
 				this.buildingAttributes = [];
 				let buildingCode = document.childNodes[3].childNodes[0].value;
 				let buildingTitle = document.childNodes[5].childNodes[1].childNodes[0].value;
@@ -65,6 +67,7 @@ export default class RoomHandler {
 				if (buildingAddress.trim() === "") {
 					return;
 				}
+				// todo: substring might be bad
 				let buildingHref = document.childNodes[5].childNodes[1].attrs[0].value.substring(1);
 				this.buildingAttributes[0] = buildingTitle.trim();
 				this.buildingAttributes[1] = buildingCode.trim();
@@ -85,8 +88,8 @@ export default class RoomHandler {
 		return;
 	}
 
-	private grabRoomHtmlFiles(unZippedContent: JSZip): Array<Promise<any> | undefined > {
-		let promiseArray: Array<Promise<any> | undefined > = [];
+	private grabRoomHtmlFiles(unZippedContent: JSZip): Array<Promise<any> | undefined> {
+		let promiseArray: Array<Promise<any> | undefined> = [];
 		for (let i = 0; i < this.buildingsDataset.length; i++) {
 			let buildingHref = this.buildingsDataset[i][3];
 			if (unZippedContent.file("rooms" + buildingHref) !== null) {
@@ -115,7 +118,6 @@ export default class RoomHandler {
 	private extractRoomInfo(trees: any[]) {
 		for (let i = 1; i < trees.length; i++) {
 			this.extractBuildingRoomInfo(trees[i], this.buildingsDataset[i]);
-			console.log("done dfs" + i);
 		}
 	}
 
@@ -125,7 +127,7 @@ export default class RoomHandler {
 				this.roomAttributes = [];
 				let roomNumber = treeElement.childNodes[1].childNodes[1].childNodes[0].value;
 				let roomCapacity = treeElement.childNodes[3].childNodes[0].value;
-				if (roomCapacity.trim() === ""){
+				if (roomCapacity.trim() === "") {
 					roomCapacity = 0;
 				} else {
 					roomCapacity = Number(roomCapacity.trim());

@@ -14,7 +14,7 @@ export class SComparison implements Filter {
 		this.inputString = inputString;
 	}
 
-	public  query(data: CourseData[]): Promise<CourseData[]> {
+	public query(data: CourseData[]): Promise<CourseData[]> {
 		let filteredData: CourseData[] = [];
 		let key = getFieldFromKey(this.sKey);
 
@@ -50,7 +50,7 @@ export function sCompareConstructor(json: any): SComparison {
 		tempInputString = json[field];
 	}
 
-	if ((typeof tempSKey) !== "string" || (typeof tempInputString) !== "string") {
+	if (typeof tempSKey !== "string" || typeof tempInputString !== "string") {
 		throw new InsightError(`incorrect typing for sKey and/or input string \n
 			sKey: ${typeof tempSKey} \n
 		  	input string: ${typeof tempInputString}`);

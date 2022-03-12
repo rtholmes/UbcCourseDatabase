@@ -88,7 +88,7 @@ export class Query {
 			let returnVal: CourseData[] = [];
 
 			for (let val of sortedMap.values()) {
-				for (let valElement of val.reverse()) {
+				for (let valElement of val) {
 					returnVal.push(valElement);
 				}
 			}

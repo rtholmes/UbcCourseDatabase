@@ -59,10 +59,11 @@ export function sCompareConstructor(json: any): SComparison {
 	checkCorrectTypeOfValueForKey(getFieldFromKey(tempSKey), tempInputString);
 	Query.isRepeatDataId(getDatasetIdFromKey(tempSKey));
 
-	const asteriskRegex: RegExp = /^.*[*].*$/;
-	if (tempInputString.match(asteriskRegex)) {
-		throw new InsightError("input string contained an * inputString:" + tempInputString);
-	}
-
+	/*
+		const asteriskRegex: RegExp = /^.*[*].*$/;
+		if (tempInputString.match(asteriskRegex)) {
+			throw new InsightError("input string contained an * inputString:" + tempInputString);
+		}
+	 */
 	return new SComparison(tempSKey, tempInputString);
 }

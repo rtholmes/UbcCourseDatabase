@@ -69,7 +69,7 @@ export default class InsightFacade implements IInsightFacade {
 			let query: Query;
 			jsonToFilter(where).then((filter) => {
 				query = new Query(filter, columns, order);
-				let id = getDatasetIdFromKey(order);
+				let id = getDatasetIdFromKey(columns[0]);
 				return this.CourseHandler.getDataFromDiskGivenId(id);
 			}).then((data) => {
 				return query.query(data);

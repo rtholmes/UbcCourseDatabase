@@ -6,10 +6,10 @@ import {CourseData} from "./CourseData";
 export class Query {
 	public where: Filter;
 	public columns: string[]; // array of mkey and skey
-	public order: string; // mkey or skey
+	public order: string | undefined; // mkey or skey
 	public static datasetName: string;
 
-	constructor(where: Filter, columns: string[], order: string) {
+	constructor(where: Filter, columns: string[], order: string | undefined) {
 		this.where = where;
 		this.columns = columns;
 		this.order = order;
@@ -17,7 +17,9 @@ export class Query {
 		for (let column of this.columns) {
 			Query.isRepeatDataId(getDatasetIdFromKey(column));
 		}
-		Query.isRepeatDataId(getDatasetIdFromKey(order));
+		if (this.order !== undefined) {
+			Query.isRepeatDataId(getDatasetIdFromKey(this.order));
+		}
 	}
 
 	public static isRepeatDataId(str: string) {
@@ -56,35 +58,44 @@ export class Query {
 	}
 
 	public organizeSections(data: CourseData[]): Promise<CourseData[]> {
-		let map: Map<string | number, CourseData[]> = new Map();
+		if (this.order === undefined) {
 
-		let key: string = getFieldFromKey(this.order);
+			return new Promise((resolve) => {
+				resolve(data);
+			});
 
-		for (const dataPoint of data) {
-			let value: string | number | undefined = dataPoint.get(key);
-			if (value === undefined) {
-				throw new InsightError("Invalid key");
+		} else {
+
+			let map: Map<string | number, CourseData[]> = new Map();
+
+			let key: string = getFieldFromKey(this.order);
+
+			for (const dataPoint of data) {
+				let value: string | number | undefined = dataPoint.get(key);
+				if (value === undefined) {
+					throw new InsightError("Invalid key");
+				}
+				let valOfMapAtDataPoint = map.get(value);
+				if (valOfMapAtDataPoint === undefined) {
+					valOfMapAtDataPoint = [];
+				}
+				valOfMapAtDataPoint.push(dataPoint);
+				map.set(value, valOfMapAtDataPoint);
 			}
-			let valOfMapAtDataPoint = map.get(value);
-			if (valOfMapAtDataPoint === undefined) {
-				valOfMapAtDataPoint = [];
+
+			const sortedMap = new Map([...map.entries()].sort());
+
+			let returnVal: CourseData[] = [];
+
+			for (let val of sortedMap.values()) {
+				for (let valElement of val.reverse()) {
+					returnVal.push(valElement);
+				}
 			}
-			valOfMapAtDataPoint.push(dataPoint);
-			map.set(value, valOfMapAtDataPoint);
+
+			return new Promise(function (resolve) {
+				resolve(returnVal);
+			});
 		}
-
-		const sortedMap = new Map([...map.entries()].sort());
-
-		let returnVal: CourseData[] = [];
-
-		for (let val of sortedMap.values()) {
-			for (let valElement of val.reverse()) {
-				returnVal.push(valElement);
-			}
-		}
-
-		return new Promise(function (resolve) {
-			resolve(returnVal);
-		});
 	}
 }

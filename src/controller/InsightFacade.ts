@@ -4,15 +4,12 @@ import {
 	InsightDatasetKind,
 	InsightError,
 	InsightResult,
-	ResultTooLargeError,
+	ResultTooLargeError
 } from "./IInsightFacade";
 
 import {
 	toProperQueryFormat,
-	jsonToFilter,
-	toInsightResult,
-	checkValidQueryParameters,
-	getDatasetIdFromKey,
+	jsonToFilter, toInsightResult, checkValidQueryParameters, getDatasetIdFromKey
 } from "../utils/QueryUtils";
 
 import {listFromDisk, removeFromDisk, checkValidId} from "../utils/DatasetUtils";
@@ -41,11 +38,9 @@ export default class InsightFacade implements IInsightFacade {
 		} catch (err) {
 			return Promise.reject(err);
 		}
-		switch (kind) {
-			case InsightDatasetKind.Courses:
-				return this.CourseHandler.processData(content, id);
-			case InsightDatasetKind.Rooms:
-				return this.RoomHandler.processData(content, id);
+		switch(kind) {
+			case InsightDatasetKind.Courses: return this.CourseHandler.processData(content, id);
+			case InsightDatasetKind.Rooms: return this.RoomHandler.processData(content, id);
 		}
 	}
 
@@ -72,30 +67,24 @@ export default class InsightFacade implements IInsightFacade {
 			checkValidQueryParameters(where, columns, order);
 
 			let query: Query;
-			jsonToFilter(where)
-				.then((filter) => {
-					query = new Query(filter, columns, order);
-					let id = getDatasetIdFromKey(order);
-					return this.CourseHandler.getDataFromDiskGivenId(id);
-				})
-				.then((data) => {
-					return query.query(data);
-				})
-				.then((queriedData) => {
-					if (queriedData.length > 5000) {
-						reject(new ResultTooLargeError());
-					}
-					return query.organizeSections(queriedData);
-				})
-				.then((organizedData) => {
-					return query.truncateSections(organizedData);
-				})
-				.then((truncatedData) => {
-					resolve(toInsightResult(query.columns, truncatedData));
-				})
-				.catch(() => {
-					reject(new InsightError());
-				});
+			jsonToFilter(where).then((filter) => {
+				query = new Query(filter, columns, order);
+				let id = getDatasetIdFromKey(columns[0]);
+				return this.CourseHandler.getDataFromDiskGivenId(id);
+			}).then((data) => {
+				return query.query(data);
+			}).then((queriedData) => {
+				if (queriedData.length > 5000) {
+					reject(new ResultTooLargeError());
+				}
+				return query.organizeSections(queriedData);
+			}).then((organizedData) => {
+				return query.truncateSections(organizedData);
+			}).then((truncatedData) => {
+				resolve(toInsightResult(query.columns, truncatedData));
+			}).catch(() => {
+				reject(new InsightError());
+			});
 		});
 	}
 
@@ -103,3 +92,4 @@ export default class InsightFacade implements IInsightFacade {
 		return listFromDisk();
 	}
 }
+

@@ -61,13 +61,13 @@ function jsonToFilter(json: any): Promise<Filter> {
  */
 
 function getDatasetIdFromKey(key: string): string {
-	let underScorePos: number = key.indexOf("_");
+	let underScorePos: number =  key.indexOf("_");
 
 	// -1 means that the value was not found therefore it was an invalid query
 	if (underScorePos === -1) {
-		throw new InsightError(
-			"Invalid query key, \n" + " expects: <dataset_id>_<dataset_key>, \n" + " actual: " + key
-		);
+		throw new InsightError("Invalid query key, \n" +
+			" expects: <dataset_id>_<dataset_key>, \n" +
+			" actual: " + key);
 	} else {
 		return key.slice(0, underScorePos);
 	}
@@ -81,13 +81,13 @@ function getDatasetIdFromKey(key: string): string {
  */
 
 function getFieldFromKey(key: string): string {
-	let underScorePos: number = key.indexOf("_");
+	let underScorePos: number =  key.indexOf("_");
 
 	// -1 means that the value was not found therefore it was an invalid query
 	if (underScorePos === -1) {
-		throw new InsightError(
-			"Invalid query key, \n" + " expects: <dataset_id>_<dataset_key>, \n" + " actual: " + key
-		);
+		throw new InsightError("Invalid query key, \n" +
+			" expects: <dataset_id>_<dataset_key>, \n" +
+			" actual: " + key);
 	}
 
 	return key.slice(underScorePos + 1);
@@ -102,7 +102,8 @@ function getFieldFromKey(key: string): string {
  * @return Promise<Array<Array<Array<string | number>>: Promise of all the filtered data returned in an array
  */
 
-function queryAllFilters(filters: Filter[], data: CourseData[]): Promise<CourseData[][]> {
+function queryAllFilters(filters: Filter[], data: CourseData[]):
+	Promise<CourseData[][]> {
 	return new Promise(function (resolve) {
 		let filteredQueries: CourseData[][] = [];
 		for (let filter of filters) {
@@ -180,27 +181,16 @@ function toProperQueryFormat(query: any): any {
  * Throws InsightError if order is not in columns
  */
 
-function checkValidQueryParameters(where: Filter, columns: string[], order: string) {
-	if (
-		where === undefined ||
+function checkValidQueryParameters(where: Filter, columns: string[], order: string | undefined) {
+	if (where === undefined ||
 		columns === undefined ||
-		columns.length === 0 ||
-		order === undefined ||
-		order.length === 0
-	) {
+		columns.length === 0) {
 		throw new InsightError("Invalid query");
 	}
-	if (!columns.includes(order)) {
+	if (typeof order === "string" && !columns.includes(order)) {
 		throw new InsightError("Order is not contained in Columns");
 	}
 }
 
-export {
-	getFieldFromKey,
-	jsonToFilter,
-	queryAllFilters,
-	toInsightResult,
-	getDatasetIdFromKey,
-	toProperQueryFormat,
-	checkValidQueryParameters,
-};
+export{getFieldFromKey, jsonToFilter, queryAllFilters, toInsightResult, getDatasetIdFromKey, toProperQueryFormat,
+	checkValidQueryParameters};

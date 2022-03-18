@@ -122,8 +122,7 @@ describe("InsightFacade", function () {
 					expect(insightDatasetCourses).to.exist;
 					expect(insightDatasetCourses).to.equal("rooms");
 				})
-				.catch((err) => {
-					console.log(err);
+				.catch(() => {
 					expect.fail("Should not execute");
 				});
 		});
@@ -380,7 +379,7 @@ describe("InsightFacade", function () {
 						]);
 					});
 				})
-				.catch((err) => {
+				.catch(() => {
 					expect.fail("Should not execute");
 				});
 		});
@@ -424,7 +423,7 @@ describe("InsightFacade", function () {
 						]);
 					});
 				})
-				.catch((err) => {
+				.catch(() => {
 					expect.fail("Should not execute");
 				});
 		});
@@ -446,7 +445,7 @@ describe("InsightFacade", function () {
 						]);
 					});
 				})
-				.catch((err) => {
+				.catch(() => {
 					expect.fail("Should not execute");
 				});
 		});

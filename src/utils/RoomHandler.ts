@@ -58,25 +58,37 @@ export default class RoomHandler {
 
 	private extractBuildingInfo(document: any) {
 		if (document.nodeName === "tr") {
-			try {
-				// todo: try doing this again cause children might not exist
-				this.buildingAttributes = [];
-				let buildingCode = document.childNodes[3].childNodes[0].value;
-				let buildingTitle = document.childNodes[5].childNodes[1].childNodes[0].value;
-				let buildingAddress = document.childNodes[7].childNodes[0].value;
-				if (buildingAddress.trim() === "") {
-					return;
-				}
-				// todo: substring might be bad
-				let buildingHref = document.childNodes[5].childNodes[1].attrs[0].value.substring(1);
-				this.buildingAttributes[0] = buildingTitle.trim();
-				this.buildingAttributes[1] = buildingCode.trim();
-				this.buildingAttributes[2] = buildingAddress.trim();
-				this.buildingAttributes[3] = buildingHref.trim();
-				this.buildingsDataset.push(this.buildingAttributes);
-			} catch {
-				return;
-			}
+			// try {
+			// 	// todo: try doing this again cause children might not exist
+			// 	this.buildingAttributes = [];
+			// 	let buildingCode = document.childNodes[3].childNodes[0].value;
+			// 	let buildingTitle = document.childNodes[5].childNodes[1].childNodes[0].value;
+			// 	let buildingAddress = document.childNodes[7].childNodes[0].value;
+			// 	if (buildingAddress.trim() === "") {
+			// 		return;
+			// 	}
+			// 	// todo: substring might be bad
+			// 	let buildingHref = document.childNodes[5].childNodes[1].attrs[0].value.substring(1);
+			// 	this.buildingAttributes[0] = buildingTitle.trim();
+			// 	this.buildingAttributes[1] = buildingCode.trim();
+			// 	this.buildingAttributes[2] = buildingAddress.trim();
+			// 	this.buildingAttributes[3] = buildingHref.trim();
+			// 	this.buildingsDataset.push(this.buildingAttributes);
+			// 	return;
+			// } catch {
+			// 	return;
+			// }
+			this.buildingAttributes = [];
+			let buildingCode = "test insert";
+			let buildingTitle = 42;
+			let buildingAddress = 42;
+			let buildingHref = "test insert";
+			this.buildingAttributes[0] = buildingTitle;
+			this.buildingAttributes[1] = buildingCode;
+			this.buildingAttributes[2] = buildingAddress;
+			this.buildingAttributes[3] = buildingHref;
+			this.buildingsDataset.push(this.buildingAttributes);
+			return;
 		}
 		try {
 			for (let i = 0; i <= document.childNodes.length; i++) {
@@ -90,17 +102,18 @@ export default class RoomHandler {
 
 	private grabRoomHtmlFiles(unZippedContent: JSZip): Array<Promise<any> | undefined> {
 		let promiseArray: Array<Promise<any> | undefined> = [];
-		for (let i = 0; i < this.buildingsDataset.length; i++) {
-			let buildingHref = this.buildingsDataset[i][3];
-			if (unZippedContent.file("rooms" + buildingHref) !== null) {
-				promiseArray.push(unZippedContent.file("rooms" + buildingHref)?.async("string"));
-			} else {
-				this.buildingsDataset[i] = undefined;
-			}
+		for (const item of this.buildingsDataset) {
+			// let buildingHref = item[3];
+			// if (unZippedContent.file("rooms" + buildingHref) !== null) {
+			// 	promiseArray.push(unZippedContent.file("rooms" + buildingHref)?.async("string"));
+			// } else {
+			// 	this.buildingsDataset[i] = undefined;
+			// }
+			promiseArray.push(unZippedContent.file("rooms/index.htm")?.async("string"));
 		}
-		this.buildingsDataset = this.buildingsDataset.filter(function (element) {
-			return element !== undefined;
-		});
+		// this.buildingsDataset = this.buildingsDataset.filter(function (element) {
+		//	return element !== undefined;
+		// });
 		return promiseArray;
 	}
 
@@ -123,32 +136,49 @@ export default class RoomHandler {
 
 	private extractBuildingRoomInfo(treeElement: any, buildingsDatasetElement: any) {
 		if (treeElement.nodeName === "tr") {
-			try {
-				this.roomAttributes = [];
-				let roomNumber = treeElement.childNodes[1].childNodes[1].childNodes[0].value;
-				let roomCapacity = treeElement.childNodes[3].childNodes[0].value;
-				if (roomCapacity.trim() === "") {
-					roomCapacity = 0;
-				} else {
-					roomCapacity = Number(roomCapacity.trim());
-				}
-				let roomFurniture = treeElement.childNodes[5].childNodes[0].value;
-				let roomType = treeElement.childNodes[7].childNodes[0].value;
-				let roomHref = treeElement.childNodes[9].childNodes[1].attrs[0].value;
-				this.roomAttributes[0] = buildingsDatasetElement[0];
-				this.roomAttributes[1] = buildingsDatasetElement[1];
-				this.roomAttributes[2] = roomNumber.trim();
-				this.roomAttributes[3] = this.roomAttributes[1] + "_" + roomNumber.trim();
-				this.roomAttributes[4] = buildingsDatasetElement[2];
-				this.roomAttributes[7] = roomCapacity;
-				this.roomAttributes[8] = roomType.trim();
-				this.roomAttributes[9] = roomFurniture.trim();
-				this.roomAttributes[10] = roomHref.trim();
-				this.roomsDataset.push(this.roomAttributes);
-				return;
-			} catch {
-				return;
-			}
+			// try {
+			// 	this.roomAttributes = [];
+			// 	let roomNumber = treeElement.childNodes[1].childNodes[1].childNodes[0].value;
+			// 	let roomCapacity = treeElement.childNodes[3].childNodes[0].value;
+			// 	if (roomCapacity.trim() === "") {
+			// 		roomCapacity = 0;
+			// 	} else {
+			// 		roomCapacity = Number(roomCapacity.trim());
+			// 	}
+			// 	let roomFurniture = treeElement.childNodes[5].childNodes[0].value;
+			// 	let roomType = treeElement.childNodes[7].childNodes[0].value;
+			// 	let roomHref = treeElement.childNodes[9].childNodes[1].attrs[0].value;
+			// 	this.roomAttributes[0] = buildingsDatasetElement[0];
+			// 	this.roomAttributes[1] = buildingsDatasetElement[1];
+			// 	this.roomAttributes[2] = roomNumber.trim();
+			// 	this.roomAttributes[3] = this.roomAttributes[1] + "_" + roomNumber.trim();
+			// 	this.roomAttributes[4] = buildingsDatasetElement[2];
+			// 	this.roomAttributes[7] = roomCapacity;
+			// 	this.roomAttributes[8] = roomType.trim();
+			// 	this.roomAttributes[9] = roomFurniture.trim();
+			// 	this.roomAttributes[10] = roomHref.trim();
+			// 	this.roomsDataset.push(this.roomAttributes);
+			// 	return;
+			// } catch {
+			// 	return;
+			// }
+			this.roomAttributes = [];
+			let roomNumber = "42";
+			let roomCapacity = "21";
+			let roomFurniture = "test";
+			let roomType = "test";
+			let roomHref = "test.com";
+			this.roomAttributes[0] = buildingsDatasetElement[0];
+			this.roomAttributes[1] = buildingsDatasetElement[1];
+			this.roomAttributes[2] = roomNumber;
+			this.roomAttributes[3] = this.roomAttributes[1] + "_" + roomNumber;
+			this.roomAttributes[4] = buildingsDatasetElement[2];
+			this.roomAttributes[7] = roomCapacity;
+			this.roomAttributes[8] = roomType;
+			this.roomAttributes[9] = roomFurniture;
+			this.roomAttributes[10] = roomHref;
+			this.roomsDataset.push(this.roomAttributes);
+			return;
 		}
 		try {
 			for (let i = 0; i <= treeElement.childNodes.length; i++) {

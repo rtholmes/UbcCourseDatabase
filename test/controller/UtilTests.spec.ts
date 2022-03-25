@@ -1,13 +1,9 @@
 import {assert, expect} from "chai";
 import {InsightError} from "../../src/controller/IInsightFacade";
-import {
-	checkCorrectTypeOfValueForKey,
-	isValidDatasetIdName
-} from "../../src/utils/DatasetUtils";
+import {checkCorrectTypeOfValueForKey, isValidDatasetIdName} from "../../src/utils/DatasetUtils";
 
 // tests for utils
-describe( "Dataset Util Tests", function () {
-
+describe("Dataset Util Tests", function () {
 	it("Test a Regex for a valid id", function () {
 		let id1: string = "test";
 		let id2: string = "test test";
@@ -28,7 +24,6 @@ describe( "Dataset Util Tests", function () {
 		assert.isFalse(isValidDatasetIdName(id2));
 		assert.isFalse(isValidDatasetIdName(id3));
 		assert.isFalse(isValidDatasetIdName(id4));
-
 	});
 
 	it("Test a Regex for an id with all whitespace", function () {
@@ -39,7 +34,6 @@ describe( "Dataset Util Tests", function () {
 		assert.isFalse(isValidDatasetIdName(id1));
 		assert.isFalse(isValidDatasetIdName(id2));
 		assert.isFalse(isValidDatasetIdName(id3));
-
 	});
 
 	it("Test that a key is passing with its expected datatype", function () {
@@ -64,12 +58,12 @@ describe( "Dataset Util Tests", function () {
 			["address", "6245 Agronomy Road V6T 1Z4"],
 			["type", "Small Group"],
 			["furniture", "Classroom-Movable Tables & Chairs"],
-			["href", "url"]
+			["href", "url"],
 		]);
 
 		for (let [key, value] of map) {
 			try {
-				checkCorrectTypeOfValueForKey(key ,value);
+				checkCorrectTypeOfValueForKey(key, value);
 			} catch (err) {
 				assert.fail((err as Error).message);
 			}
@@ -98,7 +92,7 @@ describe( "Dataset Util Tests", function () {
 			["address", 1],
 			["type", 1],
 			["furniture", 1],
-			["href", 1]
+			["href", 1],
 		]);
 
 		for (let [key, value] of map) {

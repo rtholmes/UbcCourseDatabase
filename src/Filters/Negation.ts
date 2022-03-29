@@ -10,7 +10,7 @@ export class Negation implements Filter {
 		this.filter = filter;
 	}
 
-	public query(data: CourseData[]): Promise<CourseData[]>  {
+	public query(data: CourseData[]): Promise<CourseData[]> {
 		return new Promise((resolve) => {
 			this.filter.query(data).then((queriedData: CourseData[]) => {
 				let negatedData: CourseData[];
@@ -33,7 +33,6 @@ export class Negation implements Filter {
  */
 
 export function negationConstructor(json: any): Promise<Negation> {
-
 	// catches empty NOT filter
 	if (JSON.stringify(json) === "{}") {
 		throw new InsightError("Given empty filter list for logic comparison");

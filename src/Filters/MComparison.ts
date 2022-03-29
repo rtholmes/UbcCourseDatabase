@@ -17,7 +17,7 @@ export class MComparison implements Filter {
 		this.num = num;
 	}
 
-	public query(data: CourseData[]): Promise<CourseData[]>  {
+	public query(data: CourseData[]): Promise<CourseData[]> {
 		let filteredData: CourseData[] = [];
 		let key = getFieldFromKey(this.mKey);
 
@@ -68,7 +68,7 @@ export function mCompareConstructor(comp: string, json: any): MComparison {
 		tempNum = json[field];
 	}
 
-	if ((typeof tempMKey) !== "string" || (typeof tempNum) !== "number") {
+	if (typeof tempMKey !== "string" || typeof tempNum !== "number") {
 		throw new InsightError(`incorrect typing for mkey and/or number \n
 			mKey: ${typeof tempMKey} \n
 		  	number: ${typeof tempNum}`);

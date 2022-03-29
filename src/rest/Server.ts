@@ -4,13 +4,14 @@ import cors from "cors";
 import InsightFacade from "../controller/InsightFacade";
 import {atob, btoa} from "buffer";
 import * as fs from "fs";
+import {InsightDatasetKind, NotFoundError} from "../controller/IInsightFacade";
 
 export default class Server {
 	private readonly port: number;
 	private express: Application;
 	private server: http.Server | undefined;
 	private static facade: InsightFacade;
-	private static readonly jsonFilesPath = "./data/jsonFiles";
+	public static readonly jsonFilesPath = "./data/jsonFiles";
 
 	constructor(port: number) {
 		console.info(`Server::<init>( ${port} )`);
@@ -95,27 +96,21 @@ export default class Server {
 		// http://localhost:4321/echo/hello
 		this.express.get("/echo/:msg", Server.echo);
 
-		// TODO: your other endpoints should go here
-		this.express.get("/dataset/query/:id", Server.serverQueryDataset);
-		this.express.get("/datasets", Server.serverListDatasets);
-		this.express.post("/query/:id/:jsonString", Server.serverAddQuery);
+		// Discord Bot commands
+		this.express.put("/query/:id/:jsonString", Server.serverAddQuery);
 		this.express.get("/query/:id", Server.serverGetQuery);
+		this.express.get("/dataset/query/:id", Server.serverQueryDataset);
 		this.express.get("/queries", Server.serverListQueries);
+
+		// Required commands
+		this.express.get("/datasets", Server.serverListDatasets);
+		this.express.put("/dataset/:id/:kind", Server.serverAddDataset);
+		this.express.get("/dataset/:id/", Server.serverDeleteDataset);
 	}
 
-	// The next two methods handle the echo service.
-	// These are almost certainly not the best place to put these, but are here for your reference.
-	// By updating the Server.echo function pointer above, these methods can be easily moved.
-	private static echo(req: Request, res: Response) {
-		try {
-			console.log(`Server::echo(..) - params: ${JSON.stringify(req.params)}`);
-			const response = Server.performEcho(req.params.msg);
-			res.status(200).json({result: response});
-		} catch (err) {
-			res.status(400).json({error: err});
-		}
-	}
-
+	// receives a query to the database
+	// id: the query name
+	// jsonInput: json in base64 string
 	private static serverAddQuery(req: Request, res: Response) {
 		try {
 			let jsonString = JSON.stringify(req.params);
@@ -131,6 +126,45 @@ export default class Server {
 		}
 	}
 
+	// receives a query to the database
+	// id: the query name
+	// kind: the kind, course or rooms
+	private static serverAddDataset(req: Request, res: Response) {
+		return new Promise(() => {
+			let jsonString = JSON.stringify(req.params);
+			let jsonObj = JSON.parse(jsonString);
+			let id: string = jsonObj.id;
+			let kind: InsightDatasetKind = jsonObj.kind;
+			console.log("Server::serverDeleteDataset(..) - id " + jsonString);
+			Server.facade.addDataset(id, " ", kind).then((returnId) => {
+				res.status(200).json({result: returnId});
+			}).catch((err) => {
+				res.status(400).json({error: err});
+			});
+		});
+	}
+
+	// receives the id of the dataset to delete
+	// id: the dataset name
+	private static serverDeleteDataset(req: Request, res: Response) {
+		return new Promise(() => {
+			let jsonString = JSON.stringify(req.params);
+			console.log("Server::serverDeleteDataset(..) - id " + jsonString);
+			Server.facade.removeDataset(jsonString).then((returnId) => {
+				res.status(200).json({result: returnId});
+			}).catch((err) => {
+				res.status(400).json({error: err});
+			});
+		}).catch((err) => {
+			if (err instanceof NotFoundError) {
+				res.status(404).json({error: err});
+			} else {
+				res.status(400).json({error: err});
+			}
+		});
+	}
+
+	// gets query with given id
 	private static serverGetQuery(req: Request, res: Response) {
 		try {
 			let jsonString = JSON.stringify(req.params);
@@ -144,6 +178,7 @@ export default class Server {
 		}
 	}
 
+	// Queries the dataset with query responding to id
 	private static serverQueryDataset(req: Request, res: Response) {
 		return new Promise(() => {
 			let jsonString = JSON.stringify(req.params);
@@ -163,9 +198,7 @@ export default class Server {
 		});
 	}
 
-	// The next two methods handle the echo service.
-	// These are almost certainly not the best place to put these, but are here for your reference.
-	// By updating the Server.echo function pointer above, these methods can be easily moved.
+	// Lists all datasets
 	private static serverListDatasets(req: Request, res: Response) {
 		return new Promise(() => {
 			console.log("Server::listDatasets(..)");
@@ -177,10 +210,8 @@ export default class Server {
 		});
 	}
 
-	// The next two methods handle the echo service.
-	// These are almost certainly not the best place to put these, but are here for your reference.
-	// By updating the Server.echo function pointer above, these methods can be easily moved.
-	private static serverListQueries(req: Request, res: Response) {
+	// Lists all query id's
+	private static serverListQueries(req: Request, res: Response): void {
 		try {
 			console.log("Server::serverListQueries(..)");
 			let arr: string[] = [];
@@ -203,6 +234,19 @@ export default class Server {
 		}
 	}
 
+
+	// The next two methods handle the echo service.
+	// These are almost certainly not the best place to put these, but are here for your reference.
+	// By updating the Server.echo function pointer above, these methods can be easily moved.
+	private static echo(req: Request, res: Response) {
+		try {
+			console.log(`Server::echo(..) - params: ${JSON.stringify(req.params)}`);
+			const response = Server.performEcho(req.params.msg);
+			res.status(200).json({result: response});
+		} catch (err) {
+			res.status(400).json({error: err});
+		}
+	}
 
 	private static performEcho(msg: string): string {
 		if (typeof msg !== "undefined" && msg !== null) {

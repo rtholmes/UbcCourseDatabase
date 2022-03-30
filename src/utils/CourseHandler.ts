@@ -121,7 +121,7 @@ export default class CourseHandler {
 	 */
 	public getDataFromDiskGivenId(id: string): Promise<CourseData[]> {
 		return new Promise(function (resolve, reject) {
-			if (fs.existsSync("./data/datasets")) {
+			if (fs.existsSync("./data/datasets/")) {
 				let path: string = "./data/datasets/" + id + ".txt";
 				let jsons = JSON.parse(fs.readFileSync(path,"utf8"));
 				let returnVal: CourseData[] = [];

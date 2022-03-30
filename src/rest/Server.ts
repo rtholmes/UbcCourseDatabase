@@ -5,6 +5,7 @@ import InsightFacade from "../controller/InsightFacade";
 import {atob, btoa} from "buffer";
 import * as fs from "fs";
 import {InsightDatasetKind, NotFoundError} from "../controller/IInsightFacade";
+const bodyParser = require("body-parser");
 
 export default class Server {
 	private readonly port: number;
@@ -20,7 +21,7 @@ export default class Server {
 		// let path = fs.readFileSync("./test/resources/archives/courses.zip").toString("base64");
 		// Server.facade.addDataset("courses", path, InsightDatasetKind.Courses);
 		Server.facade = new InsightFacade();
-		this.createJsonFilesFolder();
+		Server.createJsonFilesFolder();
 
 		this.registerMiddleware();
 		this.registerRoutes();
@@ -100,8 +101,53 @@ export default class Server {
 		// Discord Bot commands
 		this.express.put("/query/:id/:jsonString", Server.serverAddQuery);
 		this.express.get("/query/:id", Server.serverGetQuery);
-		this.express.get("/dataset/query/:id", Server.serverQueryDataset);
+		this.express.get("/dataset/query/:id", Server.serverQueryDatasetGivenId);
 		this.express.get("/queries", Server.serverListQueries);
+
+		// Required commands
+		this.express.get("/datasets", Server.serverListDatasets);
+		this.express.put("/dataset/:id/:kind", Server.serverAddDataset);
+		this.express.delete("/dataset/:id/", Server.serverDeleteDataset);
+		this.express.post("/query", Server.serverQueryDataset);
+	}
+
+	// receives a query to the database
+	// id: the query name
+	// kind: the kind, course or rooms
+	private static serverAddDataset(req: Request, res: Response) {
+		return new Promise(() => {
+			let jsonString = JSON.stringify(req.params);
+			let jsonObj = JSON.parse(jsonString);
+			let id: string = jsonObj.id;
+			let kind: InsightDatasetKind = jsonObj.kind;
+			let body = req.body;
+			console.log("Server::serverDeleteDataset(..) - params " + jsonString);
+			Server.facade.addDataset(id, body, kind).then((returnId) => {
+				res.status(200).json({result: returnId});
+			}).catch((err) => {
+				res.status(400).json({error: err.message});
+			});
+		});
+	}
+
+	// receives the id of the dataset to delete
+	// id: the dataset name
+	private static serverDeleteDataset(req: Request, res: Response) {
+		return new Promise(() => {
+			let jsonString = JSON.stringify(req.params);
+			console.log("Server::serverDeleteDataset(..) - id " + jsonString);
+			Server.facade.removeDataset(JSON.parse(jsonString).id).then((returnId) => {
+				res.status(200).json({result: returnId});
+			}).catch((err) => {
+				res.status(400).json({error: err.message});
+			});
+		}).catch((err) => {
+			if (err instanceof NotFoundError) {
+				res.status(404).json({error: err.message});
+			} else {
+				res.status(400).json({error: err.message});
+			}
+		});
 	}
 
 	// receives a query to the database
@@ -139,6 +185,20 @@ export default class Server {
 	// Queries the dataset with query responding to id
 	private static serverQueryDataset(req: Request, res: Response) {
 		return new Promise(() => {
+			let body = req.body;
+			console.log(`Server::serverAddQuery(..) - queryData: ${JSON.stringify(body)}`);
+			Server.facade.performQuery(body).then((insightResults) => {
+				let formattedResults = btoa(JSON.stringify(insightResults));
+				res.status(200).json({result: formattedResults});
+			}).catch((err) => {
+				res.status(400).json({error: err.message});
+			});
+		});
+	}
+
+	// Queries the dataset with query responding to id
+	private static serverQueryDatasetGivenId(req: Request, res: Response) {
+		return new Promise(() => {
 			let jsonString = JSON.stringify(req.params);
 			console.log(`Server::serverAddQuery(..) - jsonString: ${jsonString}`);
 			let jsonParsed = JSON.parse(jsonString);
@@ -151,7 +211,7 @@ export default class Server {
 				let formattedResults = btoa(JSON.stringify(insightResults));
 				res.status(200).json({result: formattedResults});
 			}).catch((err) => {
-				res.status(400).json({error: err});
+				res.status(400).json({error: err.message});
 			});
 		});
 	}
@@ -180,6 +240,18 @@ export default class Server {
 		}
 	}
 
+	// Lists all datasets
+	private static serverListDatasets(req: Request, res: Response) {
+		return new Promise(() => {
+			console.log("Server::listDatasets(..)");
+			Server.facade.listDatasets().then((insightDatasets) => {
+				res.status(200).json({result: insightDatasets});
+			}).catch((err) => {
+				res.status(400).json({error: err.message});
+			});
+		});
+	}
+
 
 	// The next two methods handle the echo service.
 	// These are almost certainly not the best place to put these, but are here for your reference.
@@ -202,7 +274,7 @@ export default class Server {
 		}
 	}
 
-	private createJsonFilesFolder() {
+	private static createJsonFilesFolder() {
 		if (!fs.existsSync("./data/")) {
 			fs.mkdirSync("./data/");
 		}

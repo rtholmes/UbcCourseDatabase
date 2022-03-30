@@ -102,11 +102,6 @@ export default class Server {
 		this.express.get("/query/:id", Server.serverGetQuery);
 		this.express.get("/dataset/query/:id", Server.serverQueryDataset);
 		this.express.get("/queries", Server.serverListQueries);
-
-		// Required commands
-		this.express.get("/datasets", Server.serverListDatasets);
-		this.express.put("/dataset/:id/:kind", Server.serverAddDataset);
-		this.express.get("/dataset/:id/", Server.serverDeleteDataset);
 	}
 
 	// receives a query to the database
@@ -125,44 +120,6 @@ export default class Server {
 		} catch (err) {
 			res.status(400).json({error: err});
 		}
-	}
-
-	// receives a query to the database
-	// id: the query name
-	// kind: the kind, course or rooms
-	private static serverAddDataset(req: Request, res: Response) {
-		return new Promise(() => {
-			let jsonString = JSON.stringify(req.params);
-			let jsonObj = JSON.parse(jsonString);
-			let id: string = jsonObj.id;
-			let kind: InsightDatasetKind = jsonObj.kind;
-			console.log("Server::serverDeleteDataset(..) - id " + jsonString);
-			Server.facade.addDataset(id, " ", kind).then((returnId) => {
-				res.status(200).json({result: returnId});
-			}).catch((err) => {
-				res.status(400).json({error: err});
-			});
-		});
-	}
-
-	// receives the id of the dataset to delete
-	// id: the dataset name
-	private static serverDeleteDataset(req: Request, res: Response) {
-		return new Promise(() => {
-			let jsonString = JSON.stringify(req.params);
-			console.log("Server::serverDeleteDataset(..) - id " + jsonString);
-			Server.facade.removeDataset(jsonString).then((returnId) => {
-				res.status(200).json({result: returnId});
-			}).catch((err) => {
-				res.status(400).json({error: err});
-			});
-		}).catch((err) => {
-			if (err instanceof NotFoundError) {
-				res.status(404).json({error: err});
-			} else {
-				res.status(400).json({error: err});
-			}
-		});
 	}
 
 	// gets query with given id
@@ -193,18 +150,6 @@ export default class Server {
 			Server.facade.performQuery(queryData).then((insightResults) => {
 				let formattedResults = btoa(JSON.stringify(insightResults));
 				res.status(200).json({result: formattedResults});
-			}).catch((err) => {
-				res.status(400).json({error: err});
-			});
-		});
-	}
-
-	// Lists all datasets
-	private static serverListDatasets(req: Request, res: Response) {
-		return new Promise(() => {
-			console.log("Server::listDatasets(..)");
-			Server.facade.listDatasets().then((insightDatasets) => {
-				res.status(200).json({result: insightDatasets});
 			}).catch((err) => {
 				res.status(400).json({error: err});
 			});

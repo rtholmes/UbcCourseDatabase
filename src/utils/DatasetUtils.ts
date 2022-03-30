@@ -93,9 +93,9 @@ function listFromDisk(): Promise<InsightDataset[]> {
 	let datasets: any[][];
 	let dataset: InsightDataset;
 	let addedInsightDatasets: InsightDataset[] = [];
-	if (fs.existsSync("./data/datasets")) {
-		fs.readdirSync("./data/datasets").forEach((file) => {
-			let path = "./data/datasets" + file;
+	if (fs.existsSync("./data/datasets/")) {
+		fs.readdirSync("./data/datasets/").forEach((file) => {
+			let path = "./data/datasets/" + file;
 			datasets = JSON.parse(fs.readFileSync(path, "utf8"));
 			let datasetIdName = file.substring(0, file.length - 4);
 			if (typeof (datasets[0][2]) === "string") {

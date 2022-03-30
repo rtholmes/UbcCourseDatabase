@@ -4,6 +4,10 @@ const Bot = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
 
 const prefix = "!";
 let queries = [];
+let answered1;
+let answered2;
+let answered3;
+let answered4;
 
 Bot.once('ready', () => {
 	console.log("C3 Bot is online!");
@@ -18,35 +22,30 @@ Bot.on('message', message => {
 	const args = message.content.slice(prefix.length).split(/ +/)
 	const command = args.shift().toLowerCase();
 
-	let answered;
-	let answered2;
-	let answered3;
-	let answered4;
-
 	if (command === "menu") {
 		handleDiscordChat();
 		mainMenu();
 	}
 
 	function mainMenu() {
-		answered = false;
+		answered1 = false;
 		message.channel.send('Please choose an option:');
 		message.channel.send('[1] Add query \n[2] List queries \n[3] Run Query \n');
 		Bot.on('message', async message => {
-			if (answered) return;
+			if (answered1) return;
 			const args = message.content.split(/ +/)
 			const command = args.shift().toLowerCase();
 
 			if (command === '1') {
-				answered = true;
+				answered1 = true;
 				return handleAddQuery();
 			}
 			if (command === '2') {
-				answered = true;
-				return handleAddQuery();
+				answered1 = true;
+				return handleListQuery();
 			}
 			if (command === '3') {
-				answered = true;
+				answered1 = true;
 				return handleRunQuery();
 			}
 		})
@@ -68,8 +67,9 @@ Bot.on('message', message => {
 		Bot.on('message', async message => {
 			if (message.author.bot || answered3) return;
 			// Todo: Base 64 query insert?
-			const args = message.content.replace(/(\r\n|\n|\r)/gm, "");
-			const queryInsert = [name, args];
+			// Todo: serverAddQuery ?
+			const json = message.content.replace(/(\r\n|\n|\r)/gm, "");
+			const queryInsert = [name, json];
 			queries.push(queryInsert);
 			answered3 = true;
 			message.channel.send("The query: " + queryInsert[0] + " was added successfully!!")
@@ -78,6 +78,7 @@ Bot.on('message', message => {
 	}
 
 	function handleListQuery() {
+		// Todo: serverListQueries?
 		message.channel.send("Loading currently added queries... ");
 		for (let i = 0; i < queries.length; i++) {
 			message.channel.send("[" + (i + 1) + "] " + queries[i][0]);
@@ -86,6 +87,9 @@ Bot.on('message', message => {
 	}
 
 	function handleRunQuery() {
+		// Todo: serverListQueries?
+		// Todo: serverGetQuery?
+		// Todo: serverQueryDataset?
 		answered4 = false;
 		handleListQuery();
 		message.channel.send("Please select a query to run: ");

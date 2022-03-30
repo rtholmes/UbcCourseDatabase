@@ -25,7 +25,16 @@ function isValidDatasetIdName(id: string): boolean {
  * @param value: value of the InsightResult
  */
 function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
-	let mFields = ["avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"];
+	let mFields = [
+		"avg",
+		"pass",
+		"fail",
+		"audit",
+		"year",
+		"lat",
+		"lon",
+		"seats"
+	];
 	let sFields = [
 		"dept",
 		"id",
@@ -39,7 +48,7 @@ function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
 		"address",
 		"type",
 		"furniture",
-		"href",
+		"href"
 	];
 
 	let expectedDatatype: string;
@@ -54,14 +63,14 @@ function checkCorrectTypeOfValueForKey(key: string, value: string | number) {
 	checkIdProperDatatype(value, expectedDatatype, key);
 }
 
-/**
- * Returns if the expected and actual values types match up
- * Otherwise throws and InsightError
- *
- * @param value: original value
- * @param expectedTypeOfValue: the expected type of the value
- * @param key: the key of the value, used for error message
- */
+	/**
+	 * Returns if the expected and actual values types match up
+	 * Otherwise throws and InsightError
+	 *
+	 * @param value: original value
+	 * @param expectedTypeOfValue: the expected type of the value
+	 * @param key: the key of the value, used for error message
+	 */
 function checkIdProperDatatype(value: string | number, expectedTypeOfValue: string, key: string): void {
 	if (typeof value === expectedTypeOfValue) {
 		return;
@@ -84,22 +93,22 @@ function listFromDisk(): Promise<InsightDataset[]> {
 	let datasets: any[][];
 	let dataset: InsightDataset;
 	let addedInsightDatasets: InsightDataset[] = [];
-	if (fs.existsSync("./data/")) {
-		fs.readdirSync("./data/").forEach((file) => {
-			let path = "./data/" + file;
+	if (fs.existsSync("./data/datasets/")) {
+		fs.readdirSync("./data/datasets/").forEach((file) => {
+			let path = "./data/datasets/" + file;
 			datasets = JSON.parse(fs.readFileSync(path, "utf8"));
 			let datasetIdName = file.substring(0, file.length - 4);
-			if (typeof datasets[0][2] === "string") {
+			if (typeof (datasets[0][2]) === "string") {
 				dataset = {
 					id: datasetIdName,
 					kind: InsightDatasetKind.Rooms,
-					numRows: datasets.length,
+					numRows: datasets.length
 				};
 			} else {
 				dataset = {
 					id: datasetIdName,
 					kind: InsightDatasetKind.Courses,
-					numRows: datasets.length,
+					numRows: datasets.length
 				};
 			}
 			addedInsightDatasets.push(dataset);
@@ -119,8 +128,8 @@ function listFromDisk(): Promise<InsightDataset[]> {
  * @param id: The id of a database
  */
 function removeFromDisk(id: string): Promise<string> {
-	try {
-		const path = "./data/" + id + ".txt";
+	try{
+		const path = "./data/datasets/" + id + ".txt";
 		fs.statSync(path);
 		fs.unlinkSync(path);
 		return new Promise(function (resolve) {
@@ -140,8 +149,8 @@ function removeFromDisk(id: string): Promise<string> {
  * @param id: The id of a database
  */
 function checkExistingIdName(id: string): void {
-	if (fs.existsSync("./data/")) {
-		fs.readdirSync("./data/").forEach((file) => {
+	if (fs.existsSync("./data/datasets/")) {
+		fs.readdirSync("./data/datasets/").forEach((file) => {
 			let datasetIdName = file.substring(0, file.length - 4);
 			if (id === datasetIdName) {
 				throw new InsightError("Given an already existing id " + id);
@@ -177,13 +186,11 @@ function checkValidId(id: string): Promise<string[]> | void {
 function unzipData(content: string): Promise<any> {
 	return new Promise((resolve, reject) => {
 		let zip = new JSZip();
-		zip.loadAsync(content, {base64: true})
-			.then(function (result) {
-				resolve(result);
-			})
-			.catch(function () {
-				reject(new InsightError("Given a non zip file"));
-			});
+		zip.loadAsync(content, {base64: true}).then(function (result) {
+			resolve(result);
+		}).catch(function () {
+			reject(new InsightError("Given a non zip file"));
+		});
 	});
 }
 
@@ -210,7 +217,11 @@ function saveToDisk(id: string, dataset: any): void {
 	if (!fs.existsSync("./data/")) {
 		fs.mkdirSync("./data/");
 	}
-	const path = "./data/" + id + ".txt";
+	if (!fs.existsSync("./data/datasets/")) {
+		fs.mkdirSync("./data/datasets/");
+	}
+	const path = "./data/datasets/" + id + ".txt";
+	// TODO might be why it takes too long
 	fs.writeFileSync(path, JSON.stringify(dataset));
 }
 
@@ -221,7 +232,7 @@ function saveToDisk(id: string, dataset: any): void {
  */
 function grabDatasetIds(): Promise<string[]> {
 	let datasetIdNames: string[] = [];
-	fs.readdirSync("./data/").forEach((file) => {
+	fs.readdirSync("./data/datasets/").forEach((file) => {
 		let datasetIdName = file.substring(0, file.length - 4);
 		datasetIdNames.push(datasetIdName);
 	});
@@ -241,5 +252,5 @@ export {
 	checkDatasetLength,
 	saveToDisk,
 	grabDatasetIds,
-	checkValidId,
+	checkValidId
 };

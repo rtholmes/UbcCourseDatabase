@@ -129,7 +129,7 @@ function listFromDisk(): Promise<InsightDataset[]> {
  */
 function removeFromDisk(id: string): Promise<string> {
 	try{
-		const path = "./data/datasets" + id + ".txt";
+		const path = "./data/datasets/" + id + ".txt";
 		fs.statSync(path);
 		fs.unlinkSync(path);
 		return new Promise(function (resolve) {
@@ -149,8 +149,8 @@ function removeFromDisk(id: string): Promise<string> {
  * @param id: The id of a database
  */
 function checkExistingIdName(id: string): void {
-	if (fs.existsSync("./data/datasets")) {
-		fs.readdirSync("./data/datasets").forEach((file) => {
+	if (fs.existsSync("./data/datasets/")) {
+		fs.readdirSync("./data/datasets/").forEach((file) => {
 			let datasetIdName = file.substring(0, file.length - 4);
 			if (id === datasetIdName) {
 				throw new InsightError("Given an already existing id " + id);

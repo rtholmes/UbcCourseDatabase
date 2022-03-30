@@ -93,9 +93,9 @@ function listFromDisk(): Promise<InsightDataset[]> {
 	let datasets: any[][];
 	let dataset: InsightDataset;
 	let addedInsightDatasets: InsightDataset[] = [];
-	if (fs.existsSync("./data/")) {
-		fs.readdirSync("./data/").forEach((file) => {
-			let path = "./data/" + file;
+	if (fs.existsSync("./data/datasets")) {
+		fs.readdirSync("./data/datasets").forEach((file) => {
+			let path = "./data/datasets" + file;
 			datasets = JSON.parse(fs.readFileSync(path, "utf8"));
 			let datasetIdName = file.substring(0, file.length - 4);
 			if (typeof (datasets[0][2]) === "string") {
@@ -129,7 +129,7 @@ function listFromDisk(): Promise<InsightDataset[]> {
  */
 function removeFromDisk(id: string): Promise<string> {
 	try{
-		const path = "./data/" + id + ".txt";
+		const path = "./data/datasets" + id + ".txt";
 		fs.statSync(path);
 		fs.unlinkSync(path);
 		return new Promise(function (resolve) {
@@ -149,8 +149,8 @@ function removeFromDisk(id: string): Promise<string> {
  * @param id: The id of a database
  */
 function checkExistingIdName(id: string): void {
-	if (fs.existsSync("./data/")) {
-		fs.readdirSync("./data/").forEach((file) => {
+	if (fs.existsSync("./data/datasets")) {
+		fs.readdirSync("./data/datasets").forEach((file) => {
 			let datasetIdName = file.substring(0, file.length - 4);
 			if (id === datasetIdName) {
 				throw new InsightError("Given an already existing id " + id);
@@ -217,7 +217,11 @@ function saveToDisk(id: string, dataset: any): void {
 	if (!fs.existsSync("./data/")) {
 		fs.mkdirSync("./data/");
 	}
-	const path = "./data/" + id + ".txt";
+	if (!fs.existsSync("./data/datasets/")) {
+		fs.mkdirSync("./data/datasets/");
+	}
+	const path = "./data/datasets/" + id + ".txt";
+	// TODO might be why it takes too long
 	fs.writeFileSync(path, JSON.stringify(dataset));
 }
 
@@ -228,7 +232,7 @@ function saveToDisk(id: string, dataset: any): void {
  */
 function grabDatasetIds(): Promise<string[]> {
 	let datasetIdNames: string[] = [];
-	fs.readdirSync("./data/").forEach((file) => {
+	fs.readdirSync("./data/datasets/").forEach((file) => {
 		let datasetIdName = file.substring(0, file.length - 4);
 		datasetIdNames.push(datasetIdName);
 	});

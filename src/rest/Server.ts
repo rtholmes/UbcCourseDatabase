@@ -20,6 +20,7 @@ export default class Server {
 		// let path = fs.readFileSync("./test/resources/archives/courses.zip").toString("base64");
 		// Server.facade.addDataset("courses", path, InsightDatasetKind.Courses);
 		Server.facade = new InsightFacade();
+		this.createJsonFilesFolder();
 
 		this.registerMiddleware();
 		this.registerRoutes();
@@ -253,6 +254,15 @@ export default class Server {
 			return `${msg}...${msg}`;
 		} else {
 			return "Message not provided";
+		}
+	}
+
+	private createJsonFilesFolder() {
+		if (!fs.existsSync("./data/")) {
+			fs.mkdirSync("./data/");
+		}
+		if (!fs.existsSync("./data/jsonFiles/")) {
+			fs.mkdirSync("./data/jsonFiles/");
 		}
 	}
 }

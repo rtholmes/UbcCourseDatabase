@@ -32,11 +32,9 @@ export default class CourseHandler {
 					this.grabData(JSONs);
 					checkDatasetLength(this.coursesDataset);
 					return saveToDisk(id, this.coursesDataset);
-				})
-				.then(() => {
+				}).then(() => {
 					return grabDatasetIds();
-				})
-				.then(function (addedIds) {
+				}).then(function (addedIds) {
 					resolve(addedIds);
 				})
 				.catch(function (err) {
@@ -55,9 +53,9 @@ export default class CourseHandler {
 	 */
 	private parseData(unZippedContent: JSZip): Array<Promise<any>> {
 		let promiseArray: Array<Promise<any>> = [];
-		unZippedContent.folder("courses")?.forEach((relativePath, file) => {
+		unZippedContent.folder("courses")?.forEach(((relativePath, file) => {
 			promiseArray.push(file.async("string"));
-		});
+		}));
 		return promiseArray;
 	}
 
@@ -88,12 +86,11 @@ export default class CourseHandler {
 						field.Fail,
 						field.Audit,
 						String(field.id),
-						Number(field.Year),
+						Number(field.Year)
 					];
 					this.checkValidSection(attributes);
 				}
-			} catch {
-				// invalid JSON, skip over
+			} catch { // invalid JSON, skip over
 			}
 		}
 		return validSectionsAdded;
@@ -124,9 +121,9 @@ export default class CourseHandler {
 	 */
 	public getDataFromDiskGivenId(id: string): Promise<CourseData[]> {
 		return new Promise(function (resolve, reject) {
-			if (fs.existsSync("./data/")) {
-				let path: string = "./data/" + id + ".txt";
-				let jsons = JSON.parse(fs.readFileSync(path, "utf8"));
+			if (fs.existsSync("./data/datasets/")) {
+				let path: string = "./data/datasets/" + id + ".txt";
+				let jsons = JSON.parse(fs.readFileSync(path,"utf8"));
 				let returnVal: CourseData[] = [];
 				for (let json of jsons) {
 					let attributes = new Map([
@@ -139,7 +136,7 @@ export default class CourseHandler {
 						["fail", json[6]],
 						["audit", json[7]],
 						["uuid", json[8]],
-						["year", json[9]],
+						["year", json[9]]
 					]);
 					returnVal.push(new CourseData(attributes));
 				}

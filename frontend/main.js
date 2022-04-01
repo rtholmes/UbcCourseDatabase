@@ -1,6 +1,8 @@
 const Discord = require('discord.js');
 const Bot = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
 const fetch = require("node-fetch");
+let fs = require('fs');
+
 
 const prefix = "!";
 
@@ -58,15 +60,17 @@ Bot.on('messageCreate', message => {
 		message.channel.send("Please input JSON query: ");
 		Bot.on('messageCreate', async message => {
 			if (message.author.bot || answered3) return;
-			let temp = btoa(message.content);
-			let link = "http://localhost:4321/query/" + name + "/" + temp;
+			// let temp = btoa(message.content);
+			let link = "http://localhost:4321/query/" + name;
 			answered3 = true;
+
+			console.log(message.content);
+
 			fetch(link, {
 				method: 'PUT',
-				body: "",
-				headers: { 'Content-Type': 'application/json'}
+				body: message.content
 				}).then(res => {
-				message.channel.send("The query: " + name + " was added successfully!!")
+				message.channel.send("The query: " + name + " was added successfully!!");
 				handleDiscordChat();
 			});
 		});
@@ -94,7 +98,6 @@ Bot.on('messageCreate', message => {
 			const args = message.content.split(/ +/)
 			const command = args.shift().toLowerCase();
 
-			let fs = require('fs');
 			let arr = [];
 			let files = fs.readdirSync("../data/jsonFiles");
 			for (let statsKey of files) {
@@ -112,16 +115,34 @@ Bot.on('messageCreate', message => {
 
 	function requestQueryResults(query) {
 		message.channel.send("You have selected the query: " + query);
-		let link = "http://localhost:4321/dataset/query/" + query;
-		fetch(link).then(res => {
+		let link = "http://localhost:4321/query";
+		let data;
+		try {
+			data = JSON.parse(fs.readFileSync(`../data/jsonFiles/${query}`).toString());
+		} catch (err) {
+			message.channel.send("Error reading file");
+			return;
+		}
+
+		if (JSON.stringify(data) === "{}") {
+			message.channel.send("Invalid JSON file");
+			return;
+		}
+
+		fetch(link, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(data)
+		}).then(res => {
 			res.json().then(res1 => {
 				if (res.status >= 400) {
-					message.channel.send("Error " + res1.error);
+					message.channel.send("Error: " + res1.error);
 					return;
 				}
 				let result = atob(res1.result);
 				const path = "../data/queryResults/" + query + ".txt";
-				let fs = require('fs');
 				fs.writeFileSync(path, result);
 				message.channel.send({
 					content: "Query Results: ",

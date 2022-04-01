@@ -2,7 +2,7 @@ import express, {Application, Request, Response} from "express";
 import * as http from "http";
 import cors from "cors";
 import InsightFacade from "../controller/InsightFacade";
-import {atob, btoa} from "buffer";
+import {btoa} from "buffer";
 import * as fs from "fs";
 import {InsightDatasetKind, NotFoundError, ResultTooLargeError} from "../controller/IInsightFacade";
 
@@ -98,7 +98,7 @@ export default class Server {
 		this.express.get("/echo/:msg", Server.echo);
 
 		// Discord Bot commands
-		this.express.put("/query/:id/:jsonString", Server.serverAddQuery);
+		this.express.put("/query/:id", Server.serverAddQuery);
 		this.express.get("/query/:id", Server.serverGetQuery);
 		this.express.get("/dataset/query/:id", Server.serverQueryDatasetGivenId);
 		this.express.get("/queries", Server.serverListQueries);
@@ -155,10 +155,10 @@ export default class Server {
 	private static serverAddQuery(req: Request, res: Response) {
 		try {
 			let jsonString = JSON.stringify(req.params);
-			console.log(`Server::serverAddQuery(..) - params: ${jsonString}`);
+			console.log(`Server::serverAddQuery(..) - params: ${jsonString} body ${req.body}`);
 			let jsonParsed = JSON.parse(jsonString);
 			let jsonName = jsonParsed.id;
-			let jsonFile = atob(jsonParsed.jsonString);
+			let jsonFile = JSON.stringify(req.body);
 			console.log(`Server::serverAddQuery(..) - jsonFile: ${jsonFile}`);
 			fs.writeFileSync(`${Server.jsonFilesPath}/${jsonName}`, jsonFile);
 			res.status(200).json({result: `${jsonName} has been saved`});
@@ -183,6 +183,7 @@ export default class Server {
 
 	// Queries the dataset with query responding to id
 	private static serverQueryDataset(req: Request, res: Response) {
+		console.log("here");
 		return new Promise(() => {
 			let body = req.body;
 			console.log(`Server::serverAddQuery(..) - queryData: ${JSON.stringify(body)}`);

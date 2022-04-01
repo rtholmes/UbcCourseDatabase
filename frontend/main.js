@@ -64,14 +64,15 @@ Bot.on('messageCreate', message => {
 			let link = "http://localhost:4321/query/" + name;
 			answered3 = true;
 
-			console.log(message.content);
-
 			fetch(link, {
 				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
 				body: message.content
-				}).then(res => {
-				message.channel.send("The query: " + name + " was added successfully!!");
-				handleDiscordChat();
+			}).then(res => {
+					message.channel.send("The query: " + name + " was added successfully!!");
+					handleDiscordChat();
 			});
 		});
 	}
@@ -160,7 +161,7 @@ Bot.on('messageCreate', message => {
 	function handleDiscordChat() {
 		message.channel.messages.fetch({Limit: 1}).then(messages => {
 			message.channel.bulkDelete(messages);
-		})
+		});
 	}
 })
 

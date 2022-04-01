@@ -112,18 +112,28 @@ Bot.on('messageCreate', message => {
 
 	function requestQueryResults(query) {
 		message.channel.send("You have selected the query: " + query);
-		// Todo: run the actual query and send back feedback
 		let link = "http://localhost:4321/dataset/query/" + query;
-		// console.log(link);
 		fetch(link).then(res => {
-			// console.log(res);
 			res.json().then(res1 => {
-				console.log(res1);
-				// let result = res1.result.toString();
-				// message.channel.send(result);
-				message.channel.send("Complete!");
-			});
-		});
+				if (res.status >= 400) {
+					message.channel.send("Error " + res1.error);
+					return;
+				}
+				let result = atob(res1.result);
+				const path = "../data/queryResults/" + query + ".txt";
+				let fs = require('fs');
+				fs.writeFileSync(path, result);
+				message.channel.send({
+					content: "Query Results: ",
+					files: [
+						"../data/queryResults/" + query + ".txt"
+					]
+				}).catch(err => {
+					console.log("printing error:");
+					console.log(err.toString());
+				});
+			})
+		})
 	}
 
 	function handleDiscordChat() {

@@ -54,39 +54,39 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public performQuery(queryInput: unknown): Promise<InsightResult[]> {
-		return Promise.reject("Not implemented.");
-		// let formattedQuery: any = toProperQueryFormat(queryInput);
-		//
-		// return new Promise((resolve, reject) => {
-		// 	if (formattedQuery.OPTIONS === undefined) {
-		// 		reject(new InsightError("OPTIONS undefined"));
-		// 	}
-		//
-		// 	let where: Filter = formattedQuery.WHERE;
-		// 	let columns: string[] = formattedQuery.OPTIONS.COLUMNS;
-		// 	let order: string = formattedQuery.OPTIONS.ORDER;
-		// 	checkValidQueryParameters(where, columns, order);
-		//
-		// 	let query: Query;
-		// 	jsonToFilter(where).then((filter) => {
-		// 		query = new Query(filter, columns, order);
-		// 		let id = getDatasetIdFromKey(columns[0]);
-		// 		return this.CourseHandler.getDataFromDiskGivenId(id);
-		// 	}).then((data) => {
-		// 		return query.query(data);
-		// 	}).then((queriedData) => {
-		// 		if (queriedData.length > 5000) {
-		// 			reject(new ResultTooLargeError());
-		// 		}
-		// 		return query.organizeSections(queriedData);
-		// 	}).then((organizedData) => {
-		// 		return query.truncateSections(organizedData);
-		// 	}).then((truncatedData) => {
-		// 		resolve(toInsightResult(query.columns, truncatedData));
-		// 	}).catch(() => {
-		// 		reject(new InsightError());
-		// 	});
-		// });
+		let formattedQuery: any = toProperQueryFormat(queryInput);
+
+		return new Promise((resolve, reject) => {
+			if (formattedQuery.OPTIONS === undefined) {
+				reject(new InsightError("OPTIONS undefined"));
+			}
+
+			let where: Filter = formattedQuery.WHERE;
+			let columns: string[] = formattedQuery.OPTIONS.COLUMNS;
+			let order: string = formattedQuery.OPTIONS.ORDER;
+			checkValidQueryParameters(where, columns, order);
+
+			let query: Query;
+			jsonToFilter(where).then((filter) => {
+				query = new Query(filter, columns, order);
+				let id = getDatasetIdFromKey(columns[0]);
+				return this.CourseHandler.getDataFromDiskGivenId(id);
+			}).then((data) => {
+				return query.query(data);
+			}).then((queriedData) => {
+				if (queriedData.length > 5000) {
+					reject(new ResultTooLargeError("Results too large " + queriedData.length));
+				}
+				return query.organizeSections(queriedData);
+			}).then((organizedData) => {
+				return query.truncateSections(organizedData);
+			}).then((truncatedData) => {
+				resolve(toInsightResult(query.columns, truncatedData));
+			}).catch((err) => {
+				console.log(err);
+				reject(err);
+			});
+		});
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {

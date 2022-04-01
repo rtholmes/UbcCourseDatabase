@@ -166,12 +166,14 @@ function toInsightResult(columns: string[], data: CourseData[]): Promise<Insight
  */
 
 function toProperQueryFormat(query: any): any {
-	if (typeof query === "string") {
-		return JSON.parse(query);
-	} else if (Array.isArray(query) || typeof query === "object") {
-		let jsonStr: string = JSON.stringify(query);
-		return JSON.parse(jsonStr);
-	} else {
+	try {
+		if (typeof query === "string") {
+			return JSON.parse(query);
+		} else if (Array.isArray(query) || typeof query === "object") {
+			let jsonStr: string = JSON.stringify(query);
+			return JSON.parse(jsonStr);
+		}
+	} catch (err) {
 		throw new InsightError("Given invalid query format");
 	}
 }

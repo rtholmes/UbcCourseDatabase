@@ -4,8 +4,7 @@ import cors from "cors";
 import InsightFacade from "../controller/InsightFacade";
 import {atob, btoa} from "buffer";
 import * as fs from "fs";
-import {InsightDatasetKind, NotFoundError} from "../controller/IInsightFacade";
-const bodyParser = require("body-parser");
+import {InsightDatasetKind, NotFoundError, ResultTooLargeError} from "../controller/IInsightFacade";
 
 export default class Server {
 	private readonly port: number;
@@ -211,7 +210,11 @@ export default class Server {
 				let formattedResults = btoa(JSON.stringify(insightResults));
 				res.status(200).json({result: formattedResults});
 			}).catch((err) => {
-				res.status(400).json({error: err.message});
+				if (err instanceof ResultTooLargeError) {
+					return res.status(404).json({error: err.message});
+				} else {
+					return res.status(400).json({error: err.message});
+				}
 			});
 		});
 	}
@@ -280,6 +283,9 @@ export default class Server {
 		}
 		if (!fs.existsSync("./data/jsonFiles/")) {
 			fs.mkdirSync("./data/jsonFiles/");
+		}
+		if (!fs.existsSync("./data/queryResults/")) {
+			fs.mkdirSync("./data/queryResults/");
 		}
 	}
 }

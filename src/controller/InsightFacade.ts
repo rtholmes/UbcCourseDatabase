@@ -75,15 +75,16 @@ export default class InsightFacade implements IInsightFacade {
 				return query.query(data);
 			}).then((queriedData) => {
 				if (queriedData.length > 5000) {
-					reject(new ResultTooLargeError());
+					reject(new ResultTooLargeError("Results too large " + queriedData.length));
 				}
 				return query.organizeSections(queriedData);
 			}).then((organizedData) => {
 				return query.truncateSections(organizedData);
 			}).then((truncatedData) => {
 				resolve(toInsightResult(query.columns, truncatedData));
-			}).catch(() => {
-				reject(new InsightError());
+			}).catch((err) => {
+				console.log(err);
+				reject(err);
 			});
 		});
 	}

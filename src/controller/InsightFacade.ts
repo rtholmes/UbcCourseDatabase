@@ -40,7 +40,7 @@ export default class InsightFacade implements IInsightFacade {
 		}
 		switch(kind) {
 			case InsightDatasetKind.Courses: return this.CourseHandler.processData(content, id);
-			case InsightDatasetKind.Rooms: return this.RoomHandler.processData(content, id);
+			case InsightDatasetKind.Rooms: return Promise.reject("Not implemented.");
 		}
 	}
 

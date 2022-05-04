@@ -4,7 +4,7 @@ This app is a discord bot to sort through different queries of different ubc cou
 
 After adding the bot to a server type !menu and you will be given the option to save, view, or run queries on the stored database. 
 After you finish your action type !menu again to return to the start with the new state of the database.
-Below is the valid EBNF which you will use to create you json queries
+Below is the valid EBNF which you will use to create json queries
 
 
 > QUERY ::='{'BODY ', ' OPTIONS '}'  
